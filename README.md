@@ -1,3 +1,5 @@
+## Meridon
+
 Meridon is a native Mastodon client with Lists support. It allows you to create lists, add users to the lists. The home view is a swipeable carousel view of your Following feed and your favorite list feeds and hastags.
 
 Main features:
@@ -13,3 +15,6 @@ Not implemented yet:
 - OS-level push notifications
 
 It is written mainly in QML/JS.
+
+
+![screenshot](/Screenshot_002.jpg?raw=true "Home menu")
