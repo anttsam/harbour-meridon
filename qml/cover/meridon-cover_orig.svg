@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 300" width="450px" height="300px">
+  <defs>
+    <!-- Hintergrund-Gradient (Dunkles Anthrazit zu hellem Grau) -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121214" />
+      <stop offset="50%" stop-color="#1c1c22" />
+      <stop offset="100%" stop-color="#32323a" />
+    </linearGradient>
+
+    <!-- Lichtstrahl-Gradient (Reines Weiss mit Transparenz) -->
+    <linearGradient id="lightBeam" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18" />
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Subtiles Linienraster (Weisse Linien mit Transparenz) -->
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.03" />
+    </pattern>
+
+    <!-- Glüheffekt für den Schmetterling -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- 1. Basis-Hintergrund -->
+  <rect width="450" height="300" fill="url(#bgGrad)" />
+
+  <!-- 2. Cyberpunk-Tech-Raster -->
+  <rect width="450" height="300" fill="url(#grid)" />
+
+  <!-- 3. Diagonaler Lichtkegel -->
+  <path d="M 0,0 L 280,0 L 450,220 L 450,300 L 150,300 Z" fill="url(#lightBeam)" />
+
+  <!-- 4. Zusätzliche Geometrie-Linien (Monochrom) -->
+  <path d="M-50,150 L500,100" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1" fill="none" />
+  <path d="M100,-50 L350,350" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1" fill="none" />
+  <circle cx="225" cy="150" r="110" stroke="#ffffff" stroke-width="1" stroke-opacity="0.05" fill="none" stroke-dasharray="4,8" />
+
+  <!-- 5. Abgerundeter, monochromer Schmetterling -->
+  <g transform="translate(0, -5)">
+    <!-- Linker grosser Flügel (Geschwungener Pfad) -->
+    <path d="M 225,150 C 190,130 130,90 125,120 C 120,150 160,185 225,150 Z" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.3" stroke-linejoin="round" />
+    <!-- Linker kleiner Flügel (Geschwungener Pfad) -->
+    <path d="M 225,150 C 180,175 145,190 155,215 C 165,240 205,200 225,150 Z" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.2" stroke-linejoin="round" />
+    
+    <!-- Rechter grosser Flügel (Geschwungener Pfad) -->
+    <path d="M 225,150 C 260,130 320,90 325,120 C 330,150 290,185 225,150 Z" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.3" stroke-linejoin="round" />
+    <!-- Rechter kleiner Flügel (Geschwungener Pfad) -->
+    <path d="M 225,150 C 270,175 305,190 295,215 C 285,240 245,200 225,150 Z" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.2" stroke-linejoin="round" />
+
+    <!-- Leuchtende innere Akzente (Weiche Formen) -->
+    <path d="M 225,150 C 200,135 155,110 150,125 C 145,140 180,165 225,150 Z" fill="#ffffff" fill-opacity="0.25" filter="url(#glow)" />
+    <path d="M 225,150 C 250,135 295,110 300,125 C 305,140 270,165 225,150 Z" fill="#ffffff" fill-opacity="0.25" filter="url(#glow)" />
+
+    <!-- Schmetterlingskörper (Glatter Kern) -->
+    <path d="M 225,120 C 229,120 228,150 227,185 C 225,190 225,190 223,185 C 222,150 221,120 225,120 Z" fill="#ffffff" fill-opacity="0.7" stroke="#ffffff" stroke-width="1" stroke-opacity="0.8" filter="url(#glow)" />
+    
+    <!-- Geschwungene Fühler -->
+    <path d="M 225,120 Q 215,95 200,95" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-opacity="0.5" stroke-linecap="round" />
+    <path d="M 225,120 Q 235,95 250,95" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-opacity="0.5" stroke-linecap="round" />
+  </g>
+</svg>
+

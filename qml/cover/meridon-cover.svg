@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   viewBox="0 0 227.9 240.1"
+   style="enable-background:new 0 0 227.9 240.1;"
+   xml:space="preserve"
+   sodipodi:docname="meridon-cover.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs35" /><sodipodi:namedview
+   id="namedview33"
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1.0"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   showgrid="false"
+   inkscape:zoom="3.4985422"
+   inkscape:cx="114.76209"
+   inkscape:cy="120.05"
+   inkscape:window-width="1874"
+   inkscape:window-height="1011"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="g30" />
+<style
+   type="text/css"
+   id="style2">
+	.st0{opacity:0.5;fill:#FFFFFF;enable-background:new    ;}
+	.st1{opacity:0.2;}
+	.st2{fill:#FFFFFF;}
+	.st3{opacity:0.2;enable-background:new    ;}
+	.st4{opacity:0.5;enable-background:new    ;}
+</style>
+<g
+   id="g30"
+   transform="matrix(1,0,0,1.1237622,0,-0.98497407)">
+	<!-- Hintergrund-Konstruktionskreis im st0-Stil (Halbe Deckkraft) -->
+	
+
+	<!-- Hauptflügel-Silhouetten im st1-Stil (Sanfte Transparenz) -->
+	<g
+   class="st1"
+   id="g14">
+		<!-- Großer linker Flügel -->
+		<path
+   class="st2"
+   d="M 113.9,120 C 85,100 30,60 25,90 c -5,30 35,65 88.9,30 z"
+   id="path6" />
+		<!-- Kleiner linker Flügel -->
+		<path
+   class="st2"
+   d="M 113.9,120 C 75,145 40,160 50,185 c 10,25 50,-15 63.9,-65 z"
+   id="path8" />
+		<!-- Großer rechter Flügel -->
+		<path
+   class="st2"
+   d="m 113.9,120 c 29,-20 84,-60 89,-30 5,30 -35,65 -89,30 z"
+   id="path10" />
+		<!-- Kleiner rechter Flügel -->
+		<path
+   class="st2"
+   d="m 113.9,120 c 39,25 74,40 64,65 -10,25 -50,-15 -64,-65 z"
+   id="path12" />
+	</g>
+
+	<!-- Innere dekorative Flügelstrukturen im st3-Stil -->
+	<path
+   class="st3"
+   d="M 113.9,118.17015 C 95,97.235786 60,62.345186 55,83.279546 50,104.21391 80,139.10451 113.9,118.17015 Z"
+   id="path16"
+   style="stroke-width:1.18137" />
+	<path
+   class="st3"
+   d="m 113.9,118.76653 c 19,-21.393505 54,-57.123658 59,-36.265349 5,20.858309 -25,56.476969 -59,36.265349 z"
+   id="path18"
+   style="stroke-width:1.18237" />
+
+	<!-- Organischer Schmetterlingskörper im st0-Stil -->
+	<path
+   class="st0"
+   d="m 114.11159,90 c 8.00181,0 6.00135,30 4.0009,65 -4.0009,5 -4.0009,5 -8.00181,0 -2.00046,-35 -4.0009,-65 4.00091,-65 z"
+   id="path20"
+   style="stroke-width:1.41437" />
+
+	<!-- Fühler-Grafik im st4-Stil -->
+	<path
+   class="st4"
+   d="m 113.9,90 q -10,-25 -25,-25"
+   stroke="#ffffff"
+   stroke-width="2"
+   fill="none"
+   stroke-linecap="round"
+   id="path22" />
+	<path
+   class="st4"
+   d="M 113.99051,89.909323 Q 123.9181,60.265901 138.80949,60.265901"
+   stroke="#ffffff"
+   stroke-width="2.16993"
+   fill="none"
+   stroke-linecap="round"
+   id="path24" />
+
+	<!-- Kleine abstrakte Zierkreise an den Fühlerspitzen analog zum Vorlagenstil -->
+	<circle
+   class="st0"
+   cx="88.900002"
+   cy="65"
+   r="4"
+   id="circle26" />
+	<circle
+   class="st0"
+   cx="138.89999"
+   cy="65"
+   r="4"
+   id="circle28" />
+</g>
+</svg>

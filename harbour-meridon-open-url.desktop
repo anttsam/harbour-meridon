@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Icon=harbour-meridon
+Name=Meridon
+MimeType=text/html;x-scheme-handler/https;
+
+X-Maemo-Service=org.anttsam.meridon
+X-Maemo-Object-Path=/org/anttsam/meridon
+X-Maemo-Method=org.anttsam.meridon.openUrl
+
+NotShowIn=X-MeeGo;
+Hidden=true

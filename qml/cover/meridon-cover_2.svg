@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 227.9 240.1" style="enable-background:new 0 0 227.9 240.1;" xml:space="preserve">
+<style type="text/css">
+	.st0{opacity:0.5;fill:#FFFFFF;enable-background:new    ;}
+	.st1{opacity:0.2;}
+	.st2{fill:#FFFFFF;}
+	.st3{opacity:0.2;enable-background:new    ;}
+	.st4{opacity:0.5;enable-background:new    ;}
+</style>
+<g>
+	<!-- Hintergrund-Konstruktionskreis im st0-Stil (Halbe Deckkraft) -->
+	<circle class="st0" cx="113.9" cy="120" r="85"/>
+
+	<!-- Hauptflügel-Silhouetten im st1-Stil (Sanfte Transparenz) -->
+	<g class="st1">
+		<!-- Großer linker Flügel -->
+		<path class="st2" d="M113.9,120 C85,100 30,60 25,90 C20,120 60,155 113.9,120 Z"/>
+		<!-- Kleiner linker Flügel -->
+		<path class="st2" d="M113.9,120 C75,145 40,160 50,185 C60,210 100,170 113.9,120 Z"/>
+		<!-- Großer rechter Flügel -->
+		<path class="st2" d="M113.9,120 C142.9,100 197.9,60 202.9,90 C207.9,120 167.9,155 113.9,120 Z"/>
+		<!-- Kleiner rechter Flügel -->
+		<path class="st2" d="M113.9,120 C152.9,145 187.9,160 177.9,185 C167.9,210 127.9,170 113.9,120 Z"/>
+	</g>
+
+	<!-- Innere dekorative Flügelstrukturen im st3-Stil -->
+	<path class="st3" d="M113.9,120 C95,105 60,80 55,95 C50,110 80,135 113.9,120 Z"/>
+	<path class="st3" d="M113.9,120 C132.9,105 167.9,80 172.9,95 C177.9,110 147.9,135 113.9,120 Z"/>
+
+	<!-- Organischer Schmetterlingskörper im st0-Stil -->
+	<path class="st0" d="M113.9,90 C117.9,90 116.9,120 115.9,155 C113.9,160 113.9,160 111.9,155 C110.9,120 109.9,90 113.9,90 Z"/>
+
+	<!-- Fühler-Grafik im st4-Stil -->
+	<path class="st4" d="M113.9,90 Q103.9,65 88.9,65" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round"/>
+	<path class="st4" d="M113.9,90 Q123.9,65 138.9,65" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+	<!-- Kleine abstrakte Zierkreise an den Fühlerspitzen analog zum Vorlagenstil -->
+	<circle class="st0" cx="88.9" cy="65" r="4"/>
+	<circle class="st0" cx="138.9" cy="65" r="4"/>
+</g>
+</svg>
+

@@ -1,0 +1,35 @@
+[Desktop Entry]
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+Icon=harbour-meridon
+Exec=harbour-meridon
+Name=Meridon
+# translation example:
+# your app name in German locale (de)
+#
+# Remember to comment out the following line, if you do not want to use
+# a different app name in German locale (de).
+#Name[de]=harbour-meridon
+
+[X-Sailjail]
+# Replace with your organization as a reverse domain name
+OrganizationName=org.anttsam
+# ApplicationName does not have to be identical to Name
+ApplicationName=meridon
+# Add the required permissions here
+Permissions=Internet;Audio
+
+# Lets sailjaild auto-manage a D-Bus activation service for this app,
+# named exactly OrganizationName.ApplicationName (org.anttsam.meridon) -
+# that exact name is hard-coded in sailjaild's own appservices.c, it can't
+# be anything else. This is what src/urlrouter.cpp registers as, and what
+# harbour-meridon-open-url.desktop's X-Maemo-Service points at.
+#
+# --type=generic is required here, not optional: without an explicit
+# invoker type, sailjaild defaults to whatever X-Nemo-Application-Type
+# above says (silica-qt5), whose booster fast-launches by dlopen()-ing the
+# target as a Qt/Silica payload - it can't do that to /usr/bin/sailjail
+# (a plain wrapper binary), which failed on-device with "Booster: cannot
+# dynamically load executable". generic type is a plain fork/exec, which
+# runs the sailjail wrapper fine.
+ExecDBus=/usr/bin/invoker --type=generic -s -n /usr/bin/sailjail -p harbour-meridon.desktop /usr/bin/harbour-meridon

@@ -1,0 +1,12 @@
+*.pro.user
+*.pro.user.*
+.qmake.stash
+Makefile
+Makefile.*
+*.o
+RPMS/
+SRPMS/
+SOURCES/
+BUILD/
+BUILDROOT/
+*.rpm

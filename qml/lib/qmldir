@@ -1,0 +1,4 @@
+singleton FontManager 1.0 FontManager.qml
+singleton BackgroundManager 1.0 BackgroundManager.qml
+singleton PresetManager 1.0 PresetManager.qml
+singleton EmojiManager 1.0 EmojiManager.qml
