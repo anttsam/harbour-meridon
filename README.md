@@ -16,5 +16,4 @@ Not implemented yet:
 
 It is written mainly in QML/JS.
 
-
-![screenshot](/Screenshot_002.jpg?raw=true "Home menu")
+<img src="Screenshot_002.png" alt="Alt Text" width="300" height=auto>
