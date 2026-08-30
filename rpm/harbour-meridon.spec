@@ -4,7 +4,7 @@ Summary:    Native Mastodon client with Lists support
 Version:    1.1
 Release:    1
 License:    GPLv3
-URL:        http://example.org/
+URL:        https://github.com/anttsam/harbour-meridon
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   sailfishsilica-qt5 >= 0.10.9
 Requires:   qt5-qtimageformats-plugin-webp
@@ -19,7 +19,6 @@ BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5Quick)
 BuildRequires:  pkgconfig(Qt5DBus)
-BuildRequires:  desktop-file-utils
 
 
 %description
@@ -38,9 +37,6 @@ Unofficial Mastodon client
 
 %install
 %qmake5_install
-
-
-desktop-file-install --delete-original         --dir %{buildroot}%{_datadir}/applications                %{buildroot}%{_datadir}/applications/*.desktop
 
 %files
 %defattr(-,root,root,-)
