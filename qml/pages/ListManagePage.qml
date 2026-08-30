@@ -19,11 +19,13 @@ AppPage {
         id: itemsModel
     }
 
-    // Set of dismissed list ids (from PinnedFeedsStorage)
+    // Sets of dismissed list/hashtag ids (from PinnedFeedsStorage)
     property var dismissedIds: ({})
+    property var dismissedHashtagIds: ({})
 
     function refreshDismissedIds() {
         dismissedIds = PinnedFeedsStorage.getDismissedListIds()
+        dismissedHashtagIds = PinnedFeedsStorage.getDismissedHashtagIds()
     }
 
     SilicaListView {
@@ -64,13 +66,9 @@ AppPage {
             readonly property bool isList: model.kind === "list"
             readonly property bool shown: isList
                 ? (listManagePage.dismissedIds[model.itemId] !== true)
-                : true
+                : (listManagePage.dismissedHashtagIds[model.itemId] !== true)
 
-
-            onClicked: {
-                if (isList)
-                    shownToggle.checked = !shownToggle.checked
-            }
+            onClicked: shownToggle.checked = !shownToggle.checked
 
             menu: ContextMenu {
                 MenuItem {
@@ -108,13 +106,20 @@ AppPage {
                anchors.verticalCenter: parent.verticalCenter
                checked: itemDelegate.shown
                onCheckedChanged: {
-                   if (!itemDelegate.isList || checked === itemDelegate.shown)
+                   if (checked === itemDelegate.shown)
                        return
 
-                   if (checked)
-                       PinnedFeedsStorage.undismissList(model.itemId)
-                   else
-                       PinnedFeedsStorage.dismissList(model.itemId)
+                   if (itemDelegate.isList) {
+                       if (checked)
+                           PinnedFeedsStorage.undismissList(model.itemId)
+                       else
+                           PinnedFeedsStorage.dismissList(model.itemId)
+                   } else {
+                       if (checked)
+                           PinnedFeedsStorage.undismissHashtag(model.itemId)
+                       else
+                           PinnedFeedsStorage.dismissHashtag(model.itemId)
+                   }
 
                    listManagePage.refreshDismissedIds()
                    FeedsManager.markDirty()

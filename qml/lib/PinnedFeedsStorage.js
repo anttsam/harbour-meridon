@@ -22,7 +22,8 @@ function ensureTable(tx) {
     LocalDb.ensureTables(tx, [
         "CREATE TABLE IF NOT EXISTS pinned_feeds "
         + "(id TEXT UNIQUE, type TEXT, value TEXT, displayName TEXT, pinned INTEGER, sortOrder INTEGER)",
-        "CREATE TABLE IF NOT EXISTS dismissed_lists (listId TEXT UNIQUE)"
+        "CREATE TABLE IF NOT EXISTS dismissed_lists (listId TEXT UNIQUE)",
+        "CREATE TABLE IF NOT EXISTS dismissed_hashtags (hashtagName TEXT UNIQUE)"
     ])
 }
 
@@ -56,6 +57,38 @@ function undismissList(listId) {
     db.transaction(function(tx) {
         ensureTable(tx)
         tx.executeSql("DELETE FROM dismissed_lists WHERE listId = ?", [listId])
+    })
+}
+
+// Same idea as the dismissed-lists table above, for followed hashtags -
+// unlike a list (server has no "hide from carousel" concept), a hashtag
+// can't be dismissed by unfollowing it without also losing the follow
+// itself, so this is a genuinely separate opt-out.
+function getDismissedHashtagIds() {
+    var db = getDatabase()
+    var ids = {}
+    db.transaction(function(tx) {
+        ensureTable(tx)
+        var rs = tx.executeSql("SELECT hashtagName FROM dismissed_hashtags")
+        for (var i = 0; i < rs.rows.length; i++)
+            ids[rs.rows.item(i).hashtagName] = true
+    })
+    return ids
+}
+
+function dismissHashtag(name) {
+    var db = getDatabase()
+    db.transaction(function(tx) {
+        ensureTable(tx)
+        tx.executeSql("INSERT OR REPLACE INTO dismissed_hashtags (hashtagName) VALUES (?)", [name])
+    })
+}
+
+function undismissHashtag(name) {
+    var db = getDatabase()
+    db.transaction(function(tx) {
+        ensureTable(tx)
+        tx.executeSql("DELETE FROM dismissed_hashtags WHERE hashtagName = ?", [name])
     })
 }
 

@@ -26,7 +26,7 @@ Item {
     property alias tabBarHidden: scrollTracker.hidden
 
     ListModel {
-        id: hiddenListsModel
+        id: hiddenModel
     }
 
     SilicaFlickable {
@@ -40,20 +40,27 @@ Item {
 
             SectionHeader {
                 text: qsTr("Hidden from header")
-                visible: hiddenListsModel.count > 0
+                visible: hiddenModel.count > 0
             }
 
             Repeater {
-                model: hiddenListsModel
+                model: hiddenModel
 
                 ListItem {
                     width: contentColumn.width
                     contentHeight: Theme.itemSizeSmall
 
-                    onClicked: pageStack.push(Qt.resolvedUrl("../ListFeedPage.qml"), {
-                        listId: model.listId,
-                        listTitle: model.title
-                    })
+                    onClicked: {
+                        if (model.kind === "hashtag")
+                            pageStack.push(Qt.resolvedUrl("../HashtagPage.qml"), {
+                                hashtag: model.itemId
+                            })
+                        else
+                            pageStack.push(Qt.resolvedUrl("../ListFeedPage.qml"), {
+                                listId: model.itemId,
+                                listTitle: model.title
+                            })
+                    }
 
                     AppLabel {
                         x: Theme.horizontalPageMargin
@@ -115,31 +122,62 @@ Item {
         VerticalScrollDecorator {}
     }
 
-    Component.onCompleted: loadHiddenLists()
+    Component.onCompleted: loadHidden()
 
-    function loadHiddenLists() {
+    function loadHidden() {
         if (busy)
             return
         busy = true
 
+        var hiddenLists = null
+        var hiddenHashtags = null
+        var pending = 2
+
+        function finish() {
+            if (pending > 0)
+                return
+
+            busy = false
+            hiddenModel.clear()
+            ;(hiddenLists || []).forEach(function(row) { hiddenModel.append(row) })
+            ;(hiddenHashtags || []).forEach(function(row) { hiddenModel.append(row) })
+        }
+
         SessionManager.authenticatedRequest("GET", "/api/v1/lists", null,
             function(response) {
-                busy = false
                 var dismissedIds = PinnedFeedsStorage.getDismissedListIds()
-                hiddenListsModel.clear()
-                var lists = response || []
-                for (var i = 0; i < lists.length; i++) {
-                    if (dismissedIds[lists[i].id] === true) {
-                        hiddenListsModel.append({
-                            listId: lists[i].id,
-                            title: lists[i].title || qsTr("Untitled list")
-                        })
-                    }
-                }
+                hiddenLists = (response || [])
+                    .filter(function(l) { return dismissedIds[l.id] === true })
+                    .map(function(l) {
+                        return { kind: "list", itemId: l.id, title: l.title || qsTr("Untitled list") }
+                    })
+                pending -= 1
+                finish()
             },
             function(status, message) {
-                busy = false
                 console.warn("[MoreSlide] loading lists failed:", status, message)
+                hiddenLists = []
+                pending -= 1
+                finish()
+            }
+        )
+
+        SessionManager.authenticatedRequest("GET", "/api/v1/followed_tags?limit=40", null,
+            function(response) {
+                var dismissedHashtagIds = PinnedFeedsStorage.getDismissedHashtagIds()
+                hiddenHashtags = (response || [])
+                    .filter(function(t) { return dismissedHashtagIds[t.name] === true })
+                    .map(function(t) {
+                        return { kind: "hashtag", itemId: t.name, title: "#" + t.name }
+                    })
+                pending -= 1
+                finish()
+            },
+            function(status, message) {
+                console.warn("[MoreSlide] loading followed hashtags failed:", status, message)
+                hiddenHashtags = []
+                pending -= 1
+                finish()
             }
         )
     }

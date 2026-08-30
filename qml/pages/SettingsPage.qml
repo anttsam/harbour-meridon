@@ -2,6 +2,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import "components"
 import "../lib" as AppLib
+import "../lib/SessionManager.js" as SessionManager
 
 AppPage {
     id: settingsPage
@@ -46,6 +47,15 @@ AppPage {
             MenuItem {
                 text: qsTr("About")
                 onClicked: pageStack.push(Qt.resolvedUrl("AboutPage.qml"))
+            }
+            MenuItem {
+                text: qsTr("Log out")
+                onClicked: {
+                    Remorse.popupAction(settingsPage, qsTr("Logging out"), function() {
+                        SessionManager.clearSession()
+                        pageStack.animatorReplace(Qt.resolvedUrl("FirstPage.qml"))
+                    })
+                }
             }
             /*MenuItem {
                 // Only Custom's own factory baseline is user-settable -

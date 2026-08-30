@@ -283,6 +283,7 @@ function loadFeeds(onDone) {
     })
 
     var dismissedIds = PinnedFeedsStorage.getDismissedListIds()
+    var dismissedHashtagIds = PinnedFeedsStorage.getDismissedHashtagIds()
 
     var listRows = null
     var hashtagRows = null
@@ -330,16 +331,18 @@ function loadFeeds(onDone) {
     SessionManager.authenticatedRequest("GET", "/api/v1/followed_tags?limit=40", null,
         function(response) {
             var tags = response || []
-            hashtagRows = tags.map(function(t) {
-                return {
-                    id: "hashtag-" + t.name,
-                    type: "hashtag",
-                    value: t.name,
-                    pinned: true,
-                    displayName: "#" + t.name,
-                    avatarUrl: ""
-                }
-            })
+            hashtagRows = tags
+                .filter(function(t) { return dismissedHashtagIds[t.name] !== true })
+                .map(function(t) {
+                    return {
+                        id: "hashtag-" + t.name,
+                        type: "hashtag",
+                        value: t.name,
+                        pinned: true,
+                        displayName: "#" + t.name,
+                        avatarUrl: ""
+                    }
+                })
             pending -= 1
             finish()
         },
