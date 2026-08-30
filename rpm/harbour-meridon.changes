@@ -1,0 +1,8 @@
+* Sun Aug 30 2026 anttsam <sami@anttila.ch> 1.1-1
+- Add native Mastodon quote posts, plus a Quote action to create your own
+- Fix a crash when deleting your own post
+- Fix followed hashtags not being unpinnable from the Home header
+- Add Log out to Settings
+
+* Sat Aug 29 2026 anttsam <sami@anttila.ch> 1.0-1
+- First release
