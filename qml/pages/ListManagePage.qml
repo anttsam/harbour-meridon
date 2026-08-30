@@ -87,9 +87,7 @@ AppPage {
                                 listManagePage.deleteList(model.itemId, index)
                             else
                                 listManagePage.unfollowHashtag(model.itemId, index)
-                        },
-                        // shorter than Silica's own 4s default
-                        2000
+                        }
                     )
                 }
             }

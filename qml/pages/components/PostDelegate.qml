@@ -98,11 +98,22 @@ ListItem {
             MenuItem {
                 visible: postDelegate.isOwnPost
                 text: qsTr("Delete")
-                onClicked: postDelegate.remorseAction(
-                    qsTr("Deleting"),
-                    function() { postDelegate.deletePost() },
-                    2000
-                )
+                onClicked: {
+                    // menu is a dynamically created/destroyed Component (see
+                    // its own comment above) - remorseAction's callback only
+                    // fires after its own (default, several-second) delay,
+                    // well after the menu (and the id-resolution context
+                    // "postDelegate" depends on here) has already been
+                    // destroyed. Capturing the object into a plain JS
+                    // variable first means the closure holds a direct
+                    // reference instead of re-resolving the id through a
+                    // context that no longer exists by then.
+                    var delegate = postDelegate
+                    delegate.remorseAction(
+                        qsTr("Deleting"),
+                        function() { delegate.deletePost() }
+                    )
+                }
             }
         }
     }
