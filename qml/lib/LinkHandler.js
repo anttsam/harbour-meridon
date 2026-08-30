@@ -1,5 +1,6 @@
 .pragma library
 .import "SessionManager.js" as SessionManager
+.import "UrlRouter.js" as UrlRouter
 
 // Classifies a tapped <a href> from rendered post/bio HTML.
 // mentionsByHref/tagsByHref (both optional) are the structured
@@ -46,7 +47,24 @@ function openLink(href, pageStack, mentionsByHref, tagsByHref) {
     } else if (link.type === "unresolvedMention") {
         resolveProfileLink(link.href, pageStack)
     } else {
-        pageStack.push(Qt.resolvedUrl("../pages/WebViewPage.qml"), { url: link.href })
+        // No structured mention/tag data backed this href, so it's either
+        // a genuinely external link or a Mastodon (or fediverse) post/
+        // profile permalink someone pasted as plain text instead of using
+        // a real quote-post attach or @mention - same resolution
+        // UrlRouter.js already does for links the OS hands this app.
+        UrlRouter.resolveAndRoute(link.href,
+            function (statusId) {
+                pageStack.push(Qt.resolvedUrl("../pages/PostDetailPage.qml"), { postUri: statusId })
+            },
+            function (accountId) {
+                pageStack.push(Qt.resolvedUrl("../pages/UserProfilePage.qml"), { did: accountId })
+            },
+            function (tag) {
+                pageStack.push(Qt.resolvedUrl("../pages/HashtagPage.qml"), { hashtag: tag })
+            },
+            function () {
+                pageStack.push(Qt.resolvedUrl("../pages/WebViewPage.qml"), { url: link.href })
+            })
     }
 }
 

@@ -11,6 +11,69 @@ function shortenLinkText(html) {
         .replace(/<span class="">(.*?)<\/span>/g, "$1")
 }
 
+// Kept in sync with PostMapper.js's own stripQuoteInlineParagraph()/
+// htmlToPlainText()/quoteUnavailableText()/mapQuote() - see their comments
+// there for the full reasoning.
+function stripQuoteInlineParagraph(html) {
+    return (html || "").replace(/<p class="quote-inline">[\s\S]*?<\/p>\s*/i, "")
+}
+
+function htmlToPlainText(html) {
+    return shortenLinkText(html || "")
+        .replace(/<\/p>/g, "\n\n")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, "\"")
+        .replace(/&#39;/g, "'")
+        .trim()
+}
+
+function quoteUnavailableText(state) {
+    switch (state) {
+        case "pending": return "Quote pending approval"
+        case "rejected": return "Quote request was declined"
+        case "revoked": return "Quote permission was revoked"
+        case "deleted": return "Quoted post was deleted"
+        case "unauthorized": return "You don't have permission to view this quote"
+        default: return "Quoted post is unavailable"
+    }
+}
+
+function mapQuote(quoteField) {
+    if (!quoteField)
+        return null
+
+    if (quoteField.state === "accepted" && quoteField.quoted_status) {
+        var qs = quoteField.quoted_status
+        // Kept in sync with PostMapper.js's own mapQuote() - preview_url is
+        // a static image on every attachment type, not just "image" ones.
+        var qsThumb = (qs.media_attachments && qs.media_attachments.length > 0)
+            ? (qs.media_attachments[0].preview_url || "") : ""
+        return {
+            uri: qs.id,
+            authorName: qs.account.display_name || "",
+            authorHandle: qs.account.acct,
+            authorAvatar: qs.account.avatar || "",
+            text: htmlToPlainText(qs.content),
+            thumbUrl: qsThumb,
+            unavailable: false
+        }
+    }
+
+    return {
+        uri: "",
+        authorName: "",
+        authorHandle: "",
+        authorAvatar: "",
+        text: quoteUnavailableText(quoteField.state),
+        thumbUrl: "",
+        unavailable: true
+    }
+}
+
 function emojiMapJson(emojis) {
     var map = {}
     if (emojis) {
@@ -155,6 +218,7 @@ function mapStatus(status, timeAgoFn) {
     }
 
     var poll = mapPoll(inner.poll)
+    var quote = mapQuote(inner.quote)
 
     return {
         uri: inner.id,
@@ -162,7 +226,8 @@ function mapStatus(status, timeAgoFn) {
         displayName: inner.account.display_name || "",
         handle: inner.account.acct,
         avatarUrl: inner.account.avatar || "",
-        postText: stripTrailingParagraph(shortenLinkText(inner.content)),
+        postText: stripTrailingParagraph(shortenLinkText(
+            inner.quote ? stripQuoteInlineParagraph(inner.content) : inner.content)),
         postEmojisJson: emojiMapJson(inner.emojis),
         authorEmojisJson: emojiMapJson(inner.account.emojis),
         repostByEmojisJson: isRepost ? emojiMapJson(status.account.emojis) : "{}",
@@ -177,7 +242,7 @@ function mapStatus(status, timeAgoFn) {
         externalJson: external ? JSON.stringify(external) : "",
         mentionsJson: JSON.stringify(mentionsByHref),
         tagsJson: JSON.stringify(tagsByHref),
-        quoteJson: "",
+        quoteJson: quote ? JSON.stringify(quote) : "",
         videoJson: video ? JSON.stringify(video) : "",
         pollJson: poll ? JSON.stringify(poll) : "",
         isRepost: isRepost,

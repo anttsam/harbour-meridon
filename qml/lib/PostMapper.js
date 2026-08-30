@@ -38,6 +38,86 @@ function shortenLinkText(html) {
         .replace(/<span class="">(.*?)<\/span>/g, "$1")
 }
 
+// Mastodon tags a quote post's server-generated fallback link paragraph
+// with this exact class (for clients that don't understand status.quote
+// at all) - stripped from postText once a real quote card is being shown
+// instead, so the same link doesn't appear twice.
+function stripQuoteInlineParagraph(html) {
+    return (html || "").replace(/<p class="quote-inline">[\s\S]*?<\/p>\s*/i, "")
+}
+
+// PostQuoteCard.qml's text is a plain (non-rich) AppLabel - just a short
+// excerpt, not full post rendering - so this strips markup entirely
+// rather than reusing styleLinks()/styleParagraphs(), which assume
+// Text.RichText. shortenLinkText() still runs first so an autolinked
+// URL's visible portion survives instead of vanishing along with its tag.
+function htmlToPlainText(html) {
+    return shortenLinkText(html || "")
+        .replace(/<\/p>/g, "\n\n")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, "\"")
+        .replace(/&#39;/g, "'")
+        .trim()
+}
+
+// Mastodon's quote.state is "accepted" only when the quoted author has
+// approved and the content is still up - every other state means
+// quoted_status is absent server-side, so the card shows this instead of
+// just disappearing (silently dropping a quote a post's author clearly
+// intended to be seen would be its own kind of confusing).
+function quoteUnavailableText(state) {
+    switch (state) {
+        case "pending": return "Quote pending approval"
+        case "rejected": return "Quote request was declined"
+        case "revoked": return "Quote permission was revoked"
+        case "deleted": return "Quoted post was deleted"
+        case "unauthorized": return "You don't have permission to view this quote"
+        default: return "Quoted post is unavailable"
+    }
+}
+
+// Every field is always present (even for the "unavailable" branch) -
+// PostQuoteCard.qml's own bindings (e.g. quote.authorAvatar.length) read
+// them unconditionally, regardless of the visible: !unavailable guard on
+// the Row that displays them, since QML evaluates property bindings
+// whether or not the item they belong to ends up visible.
+function mapQuote(quoteField) {
+    if (!quoteField)
+        return null
+
+    if (quoteField.state === "accepted" && quoteField.quoted_status) {
+        var qs = quoteField.quoted_status
+        // preview_url is a static image on every attachment type (image,
+        // video, gifv, audio), not just "image" ones - good enough for a
+        // small static thumbnail here regardless of what the original is.
+        var qsThumb = (qs.media_attachments && qs.media_attachments.length > 0)
+            ? (qs.media_attachments[0].preview_url || "") : ""
+        return {
+            uri: qs.id,
+            authorName: qs.account.display_name || "",
+            authorHandle: qs.account.acct,
+            authorAvatar: qs.account.avatar || "",
+            text: htmlToPlainText(qs.content),
+            thumbUrl: qsThumb,
+            unavailable: false
+        }
+    }
+
+    return {
+        uri: "",
+        authorName: "",
+        authorHandle: "",
+        authorAvatar: "",
+        text: quoteUnavailableText(quoteField.state),
+        thumbUrl: "",
+        unavailable: true
+    }
+}
+
 // Flattens a Status/Account "emojis" array ([{shortcode, url, static_url}])
 // into a {shortcode: url} JSON string - EmojiManager.render()'s expected
 // input. JSON-serialized because this always ends up as a ListModel row
@@ -190,6 +270,7 @@ function mapStatus(status, timeAgoFn) {
     }
 
     var poll = mapPoll(inner.poll)
+    var quote = mapQuote(inner.quote)
 
     return {
         uri: inner.id,
@@ -199,8 +280,11 @@ function mapStatus(status, timeAgoFn) {
         avatarUrl: inner.account.avatar || "",
         // Pre-rendered HTML (e.g. "<p>text <a href=...>link</a></p>"), not
         // raw text - the AT Proto version's postText was plain. Rendered
-        // with textFormat: Text.StyledText in PostDelegate.qml.
-        postText: stripTrailingParagraph(shortenLinkText(inner.content)),
+        // with textFormat: Text.StyledText in PostDelegate.qml. Strips the
+        // server's own "RE: <a>" quote-fallback paragraph first when a
+        // real quote card is about to be shown in its place instead.
+        postText: stripTrailingParagraph(shortenLinkText(
+            inner.quote ? stripQuoteInlineParagraph(inner.content) : inner.content)),
         // Both left as raw ":shortcode:" text - substituted at render time
         // by EmojiManager.render() (see its own comment for why), not baked
         // in here.
@@ -221,9 +305,7 @@ function mapStatus(status, timeAgoFn) {
         externalJson: external ? JSON.stringify(external) : "",
         mentionsJson: JSON.stringify(mentionsByHref),
         tagsJson: JSON.stringify(tagsByHref),
-        // Vanilla Mastodon has no native quote-post concept - always
-        // empty, so PostDelegate.qml's quote-card UI simply never renders.
-        quoteJson: "",
+        quoteJson: quote ? JSON.stringify(quote) : "",
         videoJson: video ? JSON.stringify(video) : "",
         pollJson: poll ? JSON.stringify(poll) : "",
         isRepost: isRepost,

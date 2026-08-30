@@ -47,6 +47,20 @@ ListItem {
     menu: Component {
         ContextMenu {
             MenuItem {
+                text: qsTr("Quote")
+                onClicked: pageStack.push(Qt.resolvedUrl("../ComposePage.qml"), {
+                    quotedStatusUri: model.uri,
+                    quotedAuthorName: model.displayName || model.handle,
+                    quotedAuthorHandle: model.handle,
+                    quotedAuthorAvatar: model.avatarUrl,
+                    // model.postText is pre-rendered HTML - PostQuoteCard's
+                    // preview text is plain (same reasoning as
+                    // PostMapper.mapQuote()'s own use of this function).
+                    quotedText: PostMapper.htmlToPlainText(model.postText)
+                })
+            }
+
+            MenuItem {
                 visible: postDelegate.isOwnPost
                 text: qsTr("Edit")
                 onClicked: pageStack.push(Qt.resolvedUrl("../ComposePage.qml"), {

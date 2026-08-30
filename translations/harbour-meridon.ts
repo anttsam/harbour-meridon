@@ -126,6 +126,14 @@
         <source>Couldn&apos;t save (%1)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Quote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a comment</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EmojiPickerDialog</name>
@@ -614,6 +622,10 @@
     </message>
     <message>
         <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quote</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -38,6 +38,15 @@ FullscreenContentPage {
     property string replyToAuthorAvatar: ""
     property string replyToText: ""
 
+    // when quotedStatusUri is non-empty, this new post quotes it (Mastodon's
+    // POST /api/v1/statuses "quoted_status_id" - never sent when editing,
+    // there's no way to attach a quote to an already-published post)
+    property string quotedStatusUri: ""
+    property string quotedAuthorName: ""
+    property string quotedAuthorHandle: ""
+    property string quotedAuthorAvatar: ""
+    property string quotedText: ""
+
     // 500 is Mastodon's common default
     property int charLimit: 500
     readonly property int charsLeft: charLimit - postField.text.length
@@ -258,7 +267,8 @@ FullscreenContentPage {
     PageHeader {
         id:headerRow
         title: composePage.isEditing ? qsTr("Edit post")
-            : (composePage.replyToUri.length > 0 ? qsTr("Reply") : qsTr("New post"))
+            : (composePage.replyToUri.length > 0 ? qsTr("Reply")
+            : (composePage.quotedStatusUri.length > 0 ? qsTr("Quote") : qsTr("New post")))
     }
 
     Item {
@@ -309,10 +319,35 @@ FullscreenContentPage {
         }
     }
 
+    Item {
+        id: quotePreview
+        width: parent.width
+        anchors.top: replyPreview.bottom
+        height: composePage.quotedStatusUri.length > 0
+            ? quotePreviewCard.height + Theme.paddingMedium * 2 : 0
+        clip: true
+
+        PostQuoteCard {
+            id: quotePreviewCard
+            x: Theme.horizontalPageMargin
+            y: Theme.paddingMedium
+            width: parent.width - 2 * Theme.horizontalPageMargin
+            quote: composePage.quotedStatusUri.length > 0 ? {
+                uri: composePage.quotedStatusUri,
+                authorName: composePage.quotedAuthorName,
+                authorHandle: composePage.quotedAuthorHandle,
+                authorAvatar: composePage.quotedAuthorAvatar,
+                text: composePage.quotedText,
+                thumbUrl: "",
+                unavailable: false
+            } : null
+        }
+    }
+
     SilicaFlickable {
         id: flick
         anchors {
-            top: replyPreview.bottom
+            top: quotePreview.bottom
             left: parent.left
             right: parent.right
             bottom: parent.bottom
@@ -412,7 +447,8 @@ FullscreenContentPage {
                 TextArea {
                     id: postField
                     width: parent.width
-                    placeholderText: composePage.replyToUri.length > 0 ? qsTr("Write your reply") :qsTr("What's up?")
+                    placeholderText: composePage.replyToUri.length > 0 ? qsTr("Write your reply")
+                        : (composePage.quotedStatusUri.length > 0 ? qsTr("Add a comment") : qsTr("What's up?"))
                     font.pixelSize: Theme.fontSizeMedium
                     focus: true
                 }
@@ -721,6 +757,8 @@ FullscreenContentPage {
             body.visibility = composePage.visibility
             if (replyToUri.length > 0)
                 body.in_reply_to_id = replyToUri
+            if (quotedStatusUri.length > 0)
+                body.quoted_status_id = quotedStatusUri
             if (mediaIds.length > 0)
                 body.media_ids = mediaIds
             // Only sent with actual warning text.
