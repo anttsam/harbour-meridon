@@ -1,3 +1,9 @@
+* Sun Aug 30 2026 anttsam <sami@anttila.ch> 1.1.1-1
+- Fix login breaking navigation (stuck on a blank/looping login screen)
+- Fix feeds not loading after logging out and back in
+- Fix a rare cover glitch right after logging in
+- Login now asks you to sign in again instead of silently reusing an old session
+
 * Sun Aug 30 2026 anttsam <sami@anttila.ch> 1.1-1
 - Add native Mastodon quote posts, plus a Quote action to create your own
 - Fix a crash when deleting your own post
