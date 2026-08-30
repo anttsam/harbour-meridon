@@ -19,9 +19,19 @@ function getCurrentUserId() {
     return current ? current.accountId : ""
 }
 
+// Lets other modules react to logout without a circular .import back
+// from here - same one-callback pattern as FeedsManager's dirty-listener.
+var _logoutListener = null
+
+function onLogout(fn) {
+    _logoutListener = fn
+}
+
 function clearSession() {
     current = null
     TokenStorage.clearSession()
+    if (_logoutListener)
+        _logoutListener()
 }
 
 function isLoggedIn() {

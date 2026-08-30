@@ -148,8 +148,9 @@ CoverBackground {
                 width: postsColumn.width
                 spacing: Theme.paddingSmall
 
-                // .get(index) against the real feed model
-                property var post: cover.homeModel.get(index)
+                // Guards against homeModel swapping out mid-refresh (e.g. on relogin)
+                property var post: (cover.homeModel && index < cover.homeModel.count)
+                    ? cover.homeModel.get(index) : null
 
                 Rectangle {
                     width: Theme.iconSizeExtraSmall
@@ -160,7 +161,7 @@ CoverBackground {
 
                     Image {
                         anchors.fill: parent
-                        source: post.avatarUrl
+                        source: post ? post.avatarUrl : ""
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                     }
@@ -172,7 +173,7 @@ CoverBackground {
 
                     Label {
                         width: parent.width
-                        text: AppLib.EmojiManager.render(post.displayName || post.handle, post.authorEmojisJson, Theme.fontSizeTiny)
+                        text: post ? AppLib.EmojiManager.render(post.displayName || post.handle, post.authorEmojisJson, Theme.fontSizeTiny) : ""
                         textFormat: Text.StyledText
                         font.pixelSize: Theme.fontSizeTiny
                         font.bold: true
@@ -183,7 +184,7 @@ CoverBackground {
 
                     Label {
                         width: parent.width
-                        text: AppLib.EmojiManager.render(post.postText, post.postEmojisJson, Theme.fontSizeTiny)
+                        text: post ? AppLib.EmojiManager.render(post.postText, post.postEmojisJson, Theme.fontSizeTiny) : ""
                         textFormat: Text.StyledText
                         linkColor: palette.secondaryHighlightColor
                         font.pixelSize: Theme.fontSizeTiny

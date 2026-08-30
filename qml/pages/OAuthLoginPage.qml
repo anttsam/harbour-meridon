@@ -5,6 +5,7 @@ import Amber.Web.Authorization 1.0
 import "components"
 import "../lib/SessionManager.js" as SessionManager
 import "../lib/TokenStorage.js" as TokenStorage
+import "../lib/FeedsManager.js" as FeedsManager
 
 AppPage {
     id: oauthPage
@@ -27,6 +28,9 @@ AppPage {
         clientSecret: oauthPage.clientSecret
         scopes: ["read", "write", "follow"]
         redirectListener.port: oauthPage.redirectPort
+        // Avoids silently re-auth'ing as whoever was last logged in via a
+        // stale WebView cookie - not fully reliable (mastodon#34829).
+        customParameters: ({ "force_login": "true" })
 
         onReceivedAccessToken: {
             var accessToken = token.access_token
@@ -57,7 +61,16 @@ AppPage {
                     TokenStorage.saveSession(accessToken, oauthPage.instanceUrl,
                         response.id, response.username)
                     console.log("[OAuth] logged in as", response.username, "on", oauthPage.instanceUrl)
-                    pageStack.animatorReplace(Qt.resolvedUrl("MainPage.qml"))
+                    // Covers the cold-start case: MainPage builds a "home"
+                    // feed before it even knows it's not logged in, dies
+                    // in the redirect to FirstPage, leaving a stale ref.
+                    FeedsManager.resetState()
+                    // animatorReplace only swaps the top slot - FirstPage
+                    // (pushed under this page) would stay buried on the
+                    // stack, breaking pageStack.previousPage() later.
+                    // clear() + push gives MainPage a clean, single-page base.
+                    pageStack.clear()
+                    pageStack.push(Qt.resolvedUrl("MainPage.qml"))
                 },
                 function(status, message) {
                     oauthPage.verifying = false

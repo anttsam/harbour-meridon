@@ -116,6 +116,20 @@ function setDirtyListener(fn) {
     dirty = false
 }
 
+// Registered as SessionManager's logout listener - without this, a relogin
+// reused feedContent entries whose ListModel died with the previous
+// session's FeedCarouselView (dead QObject refs).
+function resetState() {
+    feeds = []
+    currentFeed = null
+    loaded = false
+    feedContent = {}
+    dirty = false
+    _dirtyListener = null
+}
+
+SessionManager.onLogout(resetState)
+
 function defaultHomeFeed() {
     var seed = PinnedFeedsStorage.defaultHomeFeed()
     seed.avatarUrl = ""
