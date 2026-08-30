@@ -576,6 +576,33 @@
     </message>
 </context>
 <context>
+    <name>PeopleSearchPage</name>
+    <message>
+        <source>People matching “%1”</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No matches</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try a different search term</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t search (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PostContentWarning</name>
     <message>
         <source>Hide</source>
@@ -819,19 +846,11 @@
 <context>
     <name>SearchView</name>
     <message>
-        <source>Search</source>
+        <source>Refresh</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Search posts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Search failed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Couldn&apos;t search (%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -851,6 +870,10 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Search failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Couldn&apos;t load trending posts</source>
         <translation type="unfinished"></translation>
     </message>
@@ -859,7 +882,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Refresh</source>
+        <source>Couldn&apos;t search (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1202,6 +1229,10 @@
     </message>
     <message>
         <source>Follow %1 to add them to a list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t find @%1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

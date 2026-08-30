@@ -9,6 +9,9 @@ AppPage {
     id: profilePage
 
     property string did: ""
+    // Set instead of did when a handle (e.g. "Go to @user@server" from
+    // search) couldn't be resolved to an account - shown as the error text.
+    property string unresolvedHandle: ""
 
     property bool profileBusy: false
     property string profileError: ""
@@ -212,7 +215,9 @@ AppPage {
 
     function loadProfile() {
         if (did.length === 0) {
-            profileError = qsTr("No profile specified")
+            profileError = unresolvedHandle.length > 0
+                ? qsTr("Couldn't find @%1").arg(unresolvedHandle)
+                : qsTr("No profile specified")
             return
         }
 

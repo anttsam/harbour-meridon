@@ -36,11 +36,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A native Mastodon client for SailfishOS. Supports most of the Mastodon features as well as some basic Sailfish OS theming.</source>
+        <source>Developers and contributors</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Developers and contributors</source>
+        <source>A native Mastodon client for SailfishOS. Supports most of the Mastodon features such as lists as well as some basic Sailfish OS theming.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -126,6 +126,14 @@
         <source>Couldn&apos;t save (%1)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Quote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a comment</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EmojiPickerDialog</name>
@@ -168,10 +176,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Pull down to refresh</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Couldn&apos;t load feed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -181,6 +185,10 @@
     </message>
     <message>
         <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pull down to refresh or add content</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -469,15 +477,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Edit Lists &amp; Hashtags</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Recommended</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Untitled list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Explore</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit Lists</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -568,6 +576,33 @@
     </message>
 </context>
 <context>
+    <name>PeopleSearchPage</name>
+    <message>
+        <source>People matching “%1”</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No matches</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try a different search term</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t search (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PostContentWarning</name>
     <message>
         <source>Hide</source>
@@ -614,6 +649,10 @@
     </message>
     <message>
         <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quote</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -729,10 +768,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Coming soon</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
@@ -811,10 +846,6 @@
 <context>
     <name>SearchView</name>
     <message>
-        <source>Search</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Search posts</source>
         <translation type="unfinished"></translation>
     </message>
@@ -848,6 +879,14 @@
     </message>
     <message>
         <source>Couldn&apos;t load trending posts (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -979,6 +1018,14 @@
     </message>
     <message>
         <source>Apply overlay to cover</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logging out</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1182,6 +1229,10 @@
     </message>
     <message>
         <source>Follow %1 to add them to a list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t find @%1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
