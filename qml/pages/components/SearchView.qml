@@ -28,7 +28,7 @@ Item {
 
     ScrollDirectionTracker {
         id: scrollTracker
-        target: listFlickable
+        target: listView
     }
     property alias tabBarHidden: scrollTracker.hidden
 
@@ -40,129 +40,28 @@ Item {
         id: trendingModel
     }
 
-    SilicaFlickable {
-        id: listFlickable
-        anchors.fill: parent
+    SilicaListView {
+        id: listView
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: searchPanel.visibleSize
+        model: searchView.searched ? resultsModel : trendingModel
+        delegate: PostDelegate {}
+
+        clip: true
+
+        header: PageHeader {
+            title: searchView.searched ? searchView.queryText : "Trending"
+        }
+
         PullDownMenu {
             MenuItem {
                 text: qsTr("Refresh")
                 onClicked: searchView.searched ? searchView.runSearch(true) : searchView.loadTrending()
             }
-        }
-        contentHeight: column.height
-
-        ViewPlaceholder {
-            enabled: !searchView.busy && errorText.length === 0
-                && (searchView.searched ? resultsModel.count === 0 : trendingModel.count === 0)
-            text: searchView.searched ? qsTr("No results") : qsTr("Nothing trending")
-            hintText: searchView.searched ? qsTr("Try a different search term") : qsTr("Check back later")
-        }
-
-        ViewPlaceholder {
-            enabled: errorText.length > 0
-            text: searchView.searched ? qsTr("Search failed") : qsTr("Couldn't load trending posts")
-            hintText: errorText
-        }
-
-        Column {
-            id: column
-            width: parent.width
-            height: childrenRect.height
-
-            PageHeader {
-                title: qsTr("Search")
-            }
-            Rectangle {
-                id: header
-                width: parent.width
-                height: textInputAvailable ? searchField.height + searchContextMenu.height : searchField.height
-                color: "transparent"
-
-                SearchField {
-                    id: searchField
-                    width: parent.width
-                    placeholderText: qsTr("Search posts")
-                    EnterKey.iconSource: "image://theme/icon-m-enter-search"
-                    EnterKey.onClicked: {
-                        searchContextMenu.close(header)
-                        searchView.runSearch(true)
-                        focus = false
-                    }
-                    onTextChanged: {
-                        searchView.queryText = text
-                        if (text.trim().length === 0 && searchView.searched) {
-                            searchView.searched = false
-                            searchView.errorText = ""
-                        }
-                        if (text.trim().length !== 0) {
-                            textInputAvailable = true
-                            searchContextMenu.open(header)
-                        }
-                    }
-                    onFocusChanged: if  (focus && text.trim().length !== 0) { searchContextMenu.open(header) } //else { searchContextMenu.close(header) }
-                }
-
-                ContextMenu {
-                    id: searchContextMenu
-                    enabled: textInputAvailable
-                    MenuItem {
-                        text: "Go to #"+ searchView.queryText
-                        onClicked: pageStack.push(Qt.resolvedUrl("../HashtagPage.qml"), { hashtag: searchView.queryText })
-                        font.family: AppLib.FontManager.activeFontFamily
-                        font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
-                    }
-                    MenuItem {
-                        text: "Go to @"+ searchView.queryText
-                        onClicked: {
-                            searchContextMenu.close(header)
-                            searchField.focus = false
-                            searchView.goToAccount(searchView.queryText)
-                        }
-                        font.family: AppLib.FontManager.activeFontFamily
-                        font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
-                    }
-                    MenuItem {
-                        text: "Posts matching '"+ searchView.queryText + "'"
-                        onClicked: {
-                            searchContextMenu.close(header)
-                            searchView.runSearch(true)
-                            focus = false
-                        }
-                        font.family: AppLib.FontManager.activeFontFamily
-                        font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
-                    }
-                    MenuItem {
-                        text: "People matching '"+ searchView.queryText + "'"
-                        onClicked: {
-                            searchContextMenu.close(header)
-                            searchField.focus = false
-                            pageStack.push(Qt.resolvedUrl("../PeopleSearchPage.qml"), { query: searchView.queryText })
-                        }
-                        font.family: AppLib.FontManager.activeFontFamily
-                        font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
-                    }
-                    onActiveChanged: active ? null : searchField.focus = false
-                }
-            }
-            Repeater {
-                id: listView
-                model: searchView.searched ? resultsModel : trendingModel
-
-                // fill all the space between header and button
-                height: searchView.height - header.height
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                //clip: true
-
-                //onAtYEndChanged: checkLoadMore()
-                //onMovementEnded: checkLoadMore()
-
-                delegate: PostDelegate {}
-
-            }
-
+            //opacity: active ? 1 : 0
         }
 
         function checkLoadMore() {
@@ -178,10 +77,154 @@ Item {
 
         VerticalScrollDecorator {}
 
+        ViewPlaceholder {
+            enabled: !searchView.busy && errorText.length === 0
+                && (searchView.searched ? resultsModel.count === 0 : trendingModel.count === 0)
+            text: searchView.searched ? qsTr("No results") : qsTr("Nothing trending")
+            hintText: searchView.searched ? qsTr("Try a different search term") : qsTr("Check back later")
+        }
 
+        ViewPlaceholder {
+            enabled: errorText.length > 0
+            text: searchView.searched ? qsTr("Search failed") : qsTr("Couldn't load trending posts")
+            hintText: errorText
+        }
     }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: searchField.focus
+        onClicked: searchField.focus = false
+    }
+    MouseArea {
+        anchors.fill: parent
+        enabled: searchContextMenu.active
+        onClicked: searchContextMenu.close(header)
+    }
 
+    Item {
+        id: searchPanel
+        width: parent.width
+        height: header.height
+        anchors.bottom: parent.bottom
+
+        // Deliberately not DockedPanel here as it will not stack with main panel animation
+        property real hiddenOffset: scrollTracker.hidden ? height : 0
+        Behavior on hiddenOffset {
+            NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+        }
+        anchors.bottomMargin: -hiddenOffset
+        readonly property real visibleSize: height - hiddenOffset
+
+        Rectangle {
+            anchors.fill: parent
+            color: Theme.darkPrimaryColor
+            opacity: 0.1
+            border.color: AppLib.BackgroundManager.activeHighlightColor
+            border.width: Theme.paddingSmall / 2
+        }
+
+        Rectangle {
+            id: header
+            width: parent.width
+            anchors.top: parent.top
+            height: textInputAvailable ? searchField.height + searchContextMenu.height : searchField.height
+            color: "transparent"
+
+            // Animating here searchPanel.height for closing
+            Behavior on height {
+                enabled: !textInputAvailable
+                NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
+            }
+
+            // flag so that only commit/navigate away drop the field's focus.
+            property bool searchCommitting: false
+
+
+            ContextMenu {
+                id: searchContextMenu
+                enabled: textInputAvailable
+                _closeOnOutsideClick: false
+                clip: true
+                MenuItem {
+                    text: "Go to #"+ searchView.queryText
+                    onClicked: {
+                        header.searchCommitting = true
+                        pageStack.push(Qt.resolvedUrl("../HashtagPage.qml"), { hashtag: searchView.queryText })
+                    }
+                    font.family: AppLib.FontManager.activeFontFamily
+                    font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
+                }
+                MenuItem {
+                    text: "Go to @"+ searchView.queryText
+                    onClicked: {
+                        header.searchCommitting = true
+                        searchContextMenu.close(header)
+                        searchField.focus = false
+                        searchView.goToAccount(searchView.queryText)
+                    }
+                    font.family: AppLib.FontManager.activeFontFamily
+                    font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
+                }
+                MenuItem {
+                    text: "Posts matching '"+ searchView.queryText + "'"
+                    onClicked: {
+                        header.searchCommitting = true
+                        searchContextMenu.close(header)
+                        searchView.runSearch(true)
+                        focus = false
+                    }
+                    font.family: AppLib.FontManager.activeFontFamily
+                    font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
+                }
+                MenuItem {
+                    text: "People matching '"+ searchView.queryText + "'"
+                    onClicked: {
+                        header.searchCommitting = true
+                        searchContextMenu.close(header)
+                        searchField.focus = false
+                        pageStack.push(Qt.resolvedUrl("../PeopleSearchPage.qml"), { query: searchView.queryText })
+                    }
+                    font.family: AppLib.FontManager.activeFontFamily
+                    font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
+                }
+                onActiveChanged: {
+                    if (!active) {
+                        if (header.searchCommitting)
+                            searchField.focus = false
+                        header.searchCommitting = false
+                    }
+                }
+            }
+            SearchField {
+                id: searchField
+                width: parent.width
+                placeholderText: qsTr("Search")
+                EnterKey.iconSource: "image://theme/icon-m-enter-search"
+                EnterKey.onClicked: {
+                    header.searchCommitting = true
+                    searchContextMenu.close(header)
+                    searchView.runSearch(true)
+                    focus = false
+                }
+                onTextChanged: {
+                    searchView.queryText = text
+                    if (text.trim().length === 0 && searchView.searched) {
+                        searchView.searched = false
+                        searchView.errorText = ""
+                    }
+                    if (text.trim().length !== 0) {
+                        textInputAvailable = true
+                        searchContextMenu.open(header)
+                    } else {
+                        textInputAvailable = false
+                        searchContextMenu.close(header)
+                    }
+                }
+                onFocusChanged: if  (focus && text.trim().length !== 0) { searchContextMenu.open(header) } //else { searchContextMenu.close(header) }
+            }
+        }
+    }
 
     BusyIndicator {
         anchors.centerIn: parent
@@ -289,8 +332,8 @@ Item {
         )
     }
 
-   function scrollToTop() { //for tabbar button
-        listFlickable.scrollToTop()
+    function scrollToTop() { //for tabbar button
+        listView.scrollToTop()
         scrollTracker.reset()
     }
 }
