@@ -1,7 +1,7 @@
 Name:       harbour-meridon
 
 Summary:    Native Mastodon client with Lists support
-Version:    1.1.1
+Version:    1.2
 Release:    1
 License:    GPLv3
 URL:        https://github.com/anttsam/harbour-meridon

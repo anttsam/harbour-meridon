@@ -1,3 +1,9 @@
+* Tue Sep 01 2026 anttsam <sami@anttila.ch> 1.2-1
+- Search: quicker access to hashtags, accounts, and people search from suggestions
+- Search: smoother scrolling on long results and trending lists
+- Notifications: show the sender's avatar, tap it to open their profile
+- Notifications: Follow back for new followers, Approve/Reject for follow requests
+
 * Sun Aug 30 2026 anttsam <sami@anttila.ch> 1.1.1-1
 - Fix login breaking navigation (stuck on a blank/looping login screen)
 - Fix feeds not loading after logging out and back in
