@@ -14,6 +14,6 @@ Not implemented yet:
 - Multi account switching
 - OS-level push notifications
 
-It is written mainly in QML/JS.
+This application development is AI assisted and the library parts are mostly vibecoded.
 
 <img src="Screenshot_002.png" alt="Alt Text" width="300" height=auto>
