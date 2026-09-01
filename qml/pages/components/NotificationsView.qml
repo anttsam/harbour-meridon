@@ -31,7 +31,7 @@ Item {
         case "follow_request": return qsTr("requested to follow you")
         case "mention": return qsTr("mentioned you")
         case "status": return qsTr("posted")
-        case "poll": return qsTr("a poll you voted in has ended")
+        case "poll": return qsTr("poll you voted in has ended")
         case "update": return qsTr("edited a post you interacted with")
         default: return reason
         }
@@ -42,7 +42,7 @@ Item {
         case "favourite": return "image://theme/icon-s-like"
         case "reblog": return "image://theme/icon-s-retweet"
         case "follow":
-        case "follow_request": return "image://theme/icon-m-user"
+        case "follow_request": return "image://theme/icon-m-media-artists"
         default: return "image://theme/icon-s-chat"
         }
     }
@@ -74,57 +74,117 @@ Item {
 
         delegate: ListItem {
             id: notifDelegate
-            contentHeight: Theme.itemSizeMedium
-
+            contentHeight: mainColumn.height + 2 * Theme.paddingMedium
             onClicked: {
                 if (model.statusId && model.statusId.length > 0) {
                     pageStack.push(Qt.resolvedUrl("../PostDetailPage.qml"), {
                         postUri: model.statusId
                     })
+                } else if (model.accountId && model.accountId.length > 0) {
+                    pageStack.push(Qt.resolvedUrl("../UserProfilePage.qml"), {
+                        did: model.accountId
+                    })
                 }
             }
 
-            Row {
+            Column {
+                id: mainColumn
                 x: Theme.horizontalPageMargin
-                anchors.verticalCenter: parent.verticalCenter
+                y: Theme.paddingMedium
                 width: parent.width - 2 * Theme.horizontalPageMargin
-                spacing: Theme.paddingMedium
+                spacing: Theme.paddingSmall
 
-                Image {
-                    width: Theme.iconSizeSmall
-                    height: Theme.iconSizeSmall
-                    source: notificationsView.reasonIcon(model.reason)
-                    anchors.verticalCenter: parent.verticalCenter
+                Item {
+                    id: icoRow
+                    width: parent.width
+                    height: avatar.height
+
+                    Row {
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: Theme.paddingMedium
+
+                        Image {
+                            width: Theme.iconSizeMedium
+                            height: Theme.iconSizeMedium
+                            source: notificationsView.reasonIcon(model.reason)
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        RoundedAvatar {
+                            id: avatar
+                            size: Theme.iconSizeMedium
+                            source: model.avatarUrl
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: pageStack.push(Qt.resolvedUrl("../UserProfilePage.qml"), {
+                                    did: model.accountId
+                                })
+                            }
+                        }
+                    }
+
+                    // "follow" notifications show a Follow back button
+                    SecondaryButton {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        preferredWidth: Theme.buttonWidthExtraSmall
+                        visible: model.reason === "follow"
+                        text: model.viewerFollowing ? qsTr("Following") : qsTr("Follow back")
+                        color: model.viewerFollowing
+                            ? Theme.secondaryColor : palette.secondaryHighlightColor
+                        onClicked: notificationsView.toggleFollow(index)
+                    }
+
+                    // "follow_request" shows Approve/Reject instead
+                    Row {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: model.reason === "follow_request"
+                        spacing: Theme.paddingSmall
+
+                        IconButton {
+                            icon.source: "image://theme/icon-m-dismiss"
+                            onClicked: notificationsView.rejectFollowRequest(index)
+                        }
+                        IconButton {
+                            icon.source: "image://theme/icon-m-enter-accept"
+                            onClicked: notificationsView.authorizeFollowRequest(index)
+                        }
+                    }
                 }
-
-                Column {
-                    width: parent.width - Theme.iconSizeSmall - parent.spacing
-                    anchors.verticalCenter: parent.verticalCenter
-
+                Item {
+                    anchors.left:  parent.left
+                    anchors.leftMargin: Theme.iconSizeMedium + Theme.paddingMedium
+                    anchors.right: parent.right
+                    height: textLabel.height
                     AppLabel {
-                        width: parent.width
+                        id: textLabel
                         text: AppLib.EmojiManager.render(model.displayName || model.handle, model.emojisJson, (Theme.fontSizeSmall) * sizeMultiplier) + " " + notificationsView.reasonLabel(model.reason)
                         textFormat: Text.StyledText
                         wrapMode: Text.Wrap
                         font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
                         color: model.isRead ? Theme.secondaryColor : Theme.primaryColor
+                        width: parent.width - agoLabel.width
+                        useCustomFont: true
+                    }
+                    AppLabel {
+                        id: agoLabel
+                        text: model.timeAgo
+                        font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
+                        color: Theme.secondaryColor
+                        anchors.right: parent.right
+                        useCustomFont: true
+                        opacity: 0.6
                     }
 
-                    AppLabel {
-                        text: model.timeAgo
-                        font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier
-                        color: Theme.secondaryColor
-                    }
                 }
             }
         }
 
         VerticalScrollDecorator {}
 
-        // Declared here (not as a sibling) so it lands in this ListView's
-        // own contentItem via Flickable's default property - see
-        // ListManagePage.qml's matching comment for why this placement is
-        // what actually lets ViewPlaceholder find its flickable ancestor.
         ViewPlaceholder {
             enabled: !notificationsView.busy && notificationsModel.count === 0 && errorText.length === 0
             text: qsTr("No notifications")
@@ -171,29 +231,45 @@ Item {
 
         SessionManager.authenticatedRequest("GET", path, null,
             function(response, linkHeader) {
-                busy = false
-
                 if (reset)
                     notificationsModel.clear()
 
                 var notifs = response || []
                 console.log("[Notifications] got", notifs.length)
+                nextCursor = PostMapper.parseNextCursor(linkHeader)
 
+                var followerIds = []
                 for (var i = 0; i < notifs.length; i++) {
-                    var n = notifs[i]
-                    notificationsModel.append({
-                        reason: n.type,
-                        displayName: (n.account && n.account.display_name) || "",
-                        emojisJson: PostMapper.emojiMapJson(n.account && n.account.emojis),
-                        handle: n.account ? n.account.acct : "",
-                        // Mastodon's core API doesn't expose read status, so all true
-                        isRead: true,
-                        timeAgo: formatTimeAgo(n.created_at),
-                        statusId: n.status ? n.status.id : ""
-                    })
+                    if (notifs[i].type === "follow" && notifs[i].account)
+                        followerIds.push(notifs[i].account.id)
                 }
 
-                nextCursor = PostMapper.parseNextCursor(linkHeader)
+                if (followerIds.length === 0) {
+                    busy = false
+                    appendNotifications(notifs, null)
+                    return
+                }
+
+                var relQuery = followerIds.map(function(id) {
+                    return "id[]=" + encodeURIComponent(id)
+                }).join("&")
+
+                SessionManager.authenticatedRequest("GET",
+                    "/api/v1/accounts/relationships?" + relQuery, null,
+                    function(relResponse) {
+                        busy = false
+                        var followingById = {}
+                        var rels = relResponse || []
+                        for (var r = 0; r < rels.length; r++)
+                            followingById[rels[r].id] = !!rels[r].following
+                        appendNotifications(notifs, followingById)
+                    },
+                    function(status, message) {
+                        busy = false
+                        console.warn("[Notifications] relationships lookup failed:", status, message)
+                        appendNotifications(notifs, null)
+                    }
+                )
             },
             function(status, message) {
                 busy = false
@@ -203,6 +279,81 @@ Item {
                 } else {
                     errorText = qsTr("Couldn't load notifications (%1)").arg(message || status)
                 }
+            }
+        )
+    }
+
+    function appendNotifications(notifs, followingById) {
+        for (var i = 0; i < notifs.length; i++) {
+            var n = notifs[i]
+            notificationsModel.append({
+                reason: n.type,
+                displayName: (n.account && n.account.display_name) || "",
+                emojisJson: PostMapper.emojiMapJson(n.account && n.account.emojis),
+                handle: n.account ? n.account.acct : "",
+                accountId: n.account ? n.account.id : "",
+                avatarUrl: (n.account && n.account.avatar) || "",
+                // mastodon API doesn't have read status, so all false
+                isRead: false,
+                timeAgo: formatTimeAgo(n.created_at),
+                statusId: n.status ? n.status.id : "",
+                viewerFollowing: (followingById && n.account) ? (followingById[n.account.id] === true) : false
+            })
+        }
+    }
+
+    // optimistic-toggle pattern, same as FollowListPage.qml/SuggestedAccountsPage.qml
+    function toggleFollow(index) {
+        var item = notificationsModel.get(index)
+        if (!item || !item.accountId)
+            return
+
+        var wasFollowing = item.viewerFollowing
+        var action = wasFollowing ? "unfollow" : "follow"
+        notificationsModel.setProperty(index, "viewerFollowing", !wasFollowing)
+
+        SessionManager.authenticatedRequest("POST",
+            "/api/v1/accounts/" + encodeURIComponent(item.accountId) + "/" + action, {},
+            function(response) {
+                notificationsModel.setProperty(index, "viewerFollowing", !!response.following)
+            },
+            function(status, message) {
+                console.warn("[Notifications]", action, "failed:", status, message)
+                notificationsModel.setProperty(index, "viewerFollowing", wasFollowing)
+            }
+        )
+    }
+
+    // Resolves the pending request, so the row no longer makes sense to
+    // show afterward - removed on success rather than optimistically
+    function authorizeFollowRequest(index) {
+        var item = notificationsModel.get(index)
+        if (!item || !item.accountId)
+            return
+
+        SessionManager.authenticatedRequest("POST",
+            "/api/v1/follow_requests/" + encodeURIComponent(item.accountId) + "/authorize", {},
+            function(response) {
+                notificationsModel.remove(index)
+            },
+            function(status, message) {
+                console.warn("[Notifications] authorize follow request failed:", status, message)
+            }
+        )
+    }
+
+    function rejectFollowRequest(index) {
+        var item = notificationsModel.get(index)
+        if (!item || !item.accountId)
+            return
+
+        SessionManager.authenticatedRequest("POST",
+            "/api/v1/follow_requests/" + encodeURIComponent(item.accountId) + "/reject", {},
+            function(response) {
+                notificationsModel.remove(index)
+            },
+            function(status, message) {
+                console.warn("[Notifications] reject follow request failed:", status, message)
             }
         )
     }

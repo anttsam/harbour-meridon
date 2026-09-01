@@ -35,6 +35,7 @@ Item {
                 font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier
                 color: Theme.secondaryColor
                 font.italic: true
+                useCustomFont: true
             }
 
             Row {
@@ -54,6 +55,7 @@ Item {
                     bold: true
                     truncationMode: TruncationMode.Fade
                     width: parent.width - Theme.iconSizeExtraSmall - parent.spacing
+                    useCustomFont: true
                 }
             }
 
@@ -66,6 +68,7 @@ Item {
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier
                 color: Theme.primaryColor
+                useCustomFont: true
             }
 
             Image {

@@ -552,11 +552,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>a poll you voted in has ended</source>
+        <source>edited a post you interacted with</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>edited a post you interacted with</source>
+        <source>Following</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Follow back</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>poll you voted in has ended</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -846,10 +854,6 @@
 <context>
     <name>SearchView</name>
     <message>
-        <source>Search posts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Search failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -883,6 +887,10 @@
     </message>
     <message>
         <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

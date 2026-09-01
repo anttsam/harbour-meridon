@@ -492,11 +492,31 @@
 <context>
     <name>NotificationsView</name>
     <message>
+        <source>favourited your post</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>boosted your post</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>followed you</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>requested to follow you</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>mentioned you</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>posted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>edited a post you interacted with</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -505,6 +525,10 @@
     </message>
     <message>
         <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Following</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -536,27 +560,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>favourited your post</source>
+        <source>poll you voted in has ended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>boosted your post</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>requested to follow you</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>posted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>a poll you voted in has ended</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>edited a post you interacted with</source>
+        <source>Follow back</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

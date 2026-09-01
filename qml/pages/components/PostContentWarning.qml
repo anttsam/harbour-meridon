@@ -42,6 +42,7 @@ Rectangle {
             width: parent.width - Theme.iconSizeSmall - parent.spacing
             font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier
             color: Theme.primaryColor
+            useCustomFont: true
         }
 
 

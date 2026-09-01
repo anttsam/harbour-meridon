@@ -213,8 +213,8 @@ Column {
 
             Column {
                 id: postsColumn
-                AppLabel { text: PostMapper.formatCount(profileHeader.postsCount); bold: true; font.pixelSize: (Theme.fontSizeMedium) * sizeMultiplier }
-                AppLabel { text: qsTr("Posts"); color: Theme.secondaryColor; font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier }
+                AppLabel { text: PostMapper.formatCount(profileHeader.postsCount); bold: true; font.pixelSize: (Theme.fontSizeMedium) * sizeMultiplier; useCustomFont: true }
+                AppLabel { text: qsTr("Posts"); color: Theme.secondaryColor; font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier; useCustomFont: true }
             }
         }
 
@@ -224,8 +224,8 @@ Column {
 
             Column {
                 id: followersColumn
-                AppLabel { text: PostMapper.formatCount(profileHeader.followersCount); bold: true; font.pixelSize: (Theme.fontSizeMedium) * sizeMultiplier }
-                AppLabel { text: qsTr("Followers"); color: Theme.secondaryColor; font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier }
+                AppLabel { text: PostMapper.formatCount(profileHeader.followersCount); bold: true; font.pixelSize: (Theme.fontSizeMedium) * sizeMultiplier; useCustomFont: true}
+                AppLabel { text: qsTr("Followers"); color: Theme.secondaryColor; font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier; useCustomFont: true }
             }
 
             MouseArea {
@@ -246,8 +246,8 @@ Column {
 
             Column {
                 id: followsColumn
-                AppLabel { text: PostMapper.formatCount(profileHeader.followsCount); bold: true; font.pixelSize: (Theme.fontSizeMedium) * sizeMultiplier }
-                AppLabel { text: qsTr("Following"); color: Theme.secondaryColor; font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier }
+                AppLabel { text: PostMapper.formatCount(profileHeader.followsCount); bold: true; font.pixelSize: (Theme.fontSizeMedium) * sizeMultiplier; useCustomFont: true }
+                AppLabel { text: qsTr("Following"); color: Theme.secondaryColor; font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier; useCustomFont: true }
             }
 
             MouseArea {
@@ -269,8 +269,8 @@ Column {
 
             Column {
                 id: joinedColumn
-                AppLabel { text: profileHeader.joinedYear; bold: true; font.pixelSize: (Theme.fontSizeMedium) * sizeMultiplier }
-                AppLabel { text: qsTr("Joined"); color: Theme.secondaryColor; font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier }
+                AppLabel { text: profileHeader.joinedYear; bold: true; font.pixelSize: (Theme.fontSizeMedium) * sizeMultiplier; useCustomFont: true }
+                AppLabel { text: qsTr("Joined"); color: Theme.secondaryColor; font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier; useCustomFont: true }
             }
         }
     }
