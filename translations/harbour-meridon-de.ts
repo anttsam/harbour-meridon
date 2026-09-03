@@ -762,25 +762,6 @@
     </message>
 </context>
 <context>
-    <name>ProfileSectionPickerPage</name>
-    <message>
-        <source>View</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Posts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Likes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bookmarks</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ProfileView</name>
     <message>
         <source>Refresh</source>
@@ -807,27 +788,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not available yet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Replies</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Media</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Videos</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Likes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Lists</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -848,6 +809,14 @@
     </message>
     <message>
         <source>Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing here yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

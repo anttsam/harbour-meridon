@@ -44,7 +44,6 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/pages/MainPage.qml \
     qml/pages/OAuthLoginPage.qml \
     qml/pages/PostDetailPage.qml \
-    qml/pages/ProfileSectionPickerPage.qml \
     qml/pages/SettingsPage.qml \
     qml/pages/UserProfilePage.qml \
     qml/pages/VideoPlayerPage.qml \

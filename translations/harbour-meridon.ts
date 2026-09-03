@@ -762,42 +762,7 @@
     </message>
 </context>
 <context>
-    <name>ProfileSectionPickerPage</name>
-    <message>
-        <source>View</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Posts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Likes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bookmarks</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ProfileView</name>
-    <message>
-        <source>Refresh</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Log out</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Posts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Couldn&apos;t load profile</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Not logged in</source>
         <translation type="unfinished"></translation>
@@ -807,35 +772,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not available yet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Replies</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Media</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Videos</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Likes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Lists</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Couldn&apos;t load (%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Manage Lists</source>
+        <source>Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log out</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -843,11 +788,35 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Manage Lists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Bookmarks</source>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing here yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Favourites</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

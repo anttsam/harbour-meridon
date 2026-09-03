@@ -3,9 +3,14 @@ import Sailfish.Silica 1.0
 import "../../lib/SessionManager.js" as SessionManager
 import "../../lib/PostMapper.js" as PostMapper
 import "../../lib/FeedsManager.js" as FeedsManager
+import "../../lib/VideoExpansionTracker.js" as VideoExpansionTracker
+
+// using now the same shape as FeedCarouselView.qml/FeedPane.qml
 
 Item {
     id: profileView
+
+    property bool isPortrait: true
 
     property bool busy: false
     property string errorText: ""
@@ -25,129 +30,101 @@ Item {
     property string createdAt: ""
     property var fieldsList: []
 
-    property string currentSection: "posts"
+    // The carousel below is only built once real profile data has arrived
+    readonly property bool profileReady: handle.length > 0
 
-    // MainPage owns all picker attach/detach
-    signal requestPicker()
+    // Per-section content cache, owned here so it survives SlideshowView recycling
+    property var _sectionContent: ({})
 
-    property bool feedBusy: false
-    property string feedError: ""
-    property string nextCursor: ""
-
-    // Guards the onContentYChanged load-more check below against firing
-    // more than once for the same page of results
-    property string lastLoadMoreCursor: ""
-
-    ScrollDirectionTracker {
-        id: scrollTracker
-        target: listView
-    }
-    property alias tabBarHidden: scrollTracker.hidden
-
-    ListModel {
-        id: postsModel
+    function getSectionContent(key, anchor) {
+        if (!_sectionContent[key]) {
+            _sectionContent[key] = {
+                model: Qt.createQmlObject("import QtQuick 2.0; ListModel {}",
+                    anchor, "ProfileSectionModel"),
+                busy: false,
+                nextCursor: "",
+                lastLoadMoreCursor: "",
+                loadedOnce: false,
+                errorText: ""
+            }
+        }
+        return _sectionContent[key]
     }
 
-    SilicaListView {
-        id: listView
-        anchors.fill: parent
-        model: postsModel
+    // Lives here, not on any one carousel delegate
+    function loadSection(sectionKey, reset, onDone) {
+        var session = SessionManager.getSession()
+        var content = getSectionContent(sectionKey, profileView)
+        if (content.busy && !reset) {
+            if (onDone) onDone(true, "", 0)
+            return
+        }
+        if (!session) {
+            if (onDone) onDone(false, "Not logged in", 0)
+            return
+        }
 
-        header: Column {
-            width: parent.width
+        content.busy = true
+        if (reset) {
+            content.errorText = ""
+            content.nextCursor = ""
+            content.lastLoadMoreCursor = ""
+        }
 
-            ProfileHeader {
-                did: profileView.did
-                displayName: profileView.displayName
-                emojisJson: profileView.emojisJson
-                handle: profileView.handle
-                avatarUrl: profileView.avatarUrl
-                bannerUrl: profileView.bannerUrl
-                bio: profileView.bio
-                followersCount: profileView.followersCount
-                followsCount: profileView.followsCount
-                postsCount: profileView.postsCount
-                isBot: profileView.isBot
-                isLocked: profileView.isLocked
-                createdAt: profileView.createdAt
-                fieldsList: profileView.fieldsList
-                currentUserDid: SessionManager.getCurrentUserId()
-            }
+        // Note: these are always the logged-in user's own.
+        var path
+        if (sectionKey === "likes")
+            path = "/api/v1/favourites?limit=20"
+        else if (sectionKey === "bookmarks")
+            path = "/api/v1/bookmarks?limit=20"
+        else
+            path = "/api/v1/accounts/" + encodeURIComponent(session.accountId) + "/statuses?limit=20"
+        if (!reset && content.nextCursor.length > 0)
+            path += "&max_id=" + encodeURIComponent(content.nextCursor)
 
-            Item { width: 1; height: Theme.paddingMedium }
+        SessionManager.authenticatedRequest("GET", path, null,
+            function(response, linkHeader) {
+                var statuses = response || []
+                var parsedCursor = PostMapper.parseNextCursor(linkHeader)
 
-            PageHeader {
-                title: profileView.sectionLabel(profileView.currentSection)
+                FeedsManager.mapStatusesAsync(statuses, function(rows) {
+                    content.busy = false
+                    content.loadedOnce = true
 
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: profileView.requestPicker()
+                    if (reset)
+                        content.model.clear()
+
+                    for (var i = 0; i < rows.length; i++)
+                        content.model.append(rows[i])
+
+                    content.nextCursor = parsedCursor
+
+                    if (onDone) onDone(true, "", 0)
+                })
+            },
+            function(status, message) {
+                content.busy = false
+                if (status === 401) {
+                    SessionManager.clearSession()
+                    pageStack.animatorReplace(Qt.resolvedUrl("../FirstPage.qml"))
+                } else {
+                    content.errorText = qsTr("Couldn't load (%1)").arg(message || status)
                 }
+                if (onDone) onDone(false, message, status)
             }
-        }
-
-        PullDownMenu {
-            MenuItem {
-                text: qsTr("Log out")
-                onClicked: {
-                    Remorse.popupAction(profileView, qsTr("Logging out"), function() {
-                        SessionManager.clearSession()
-                        pageStack.animatorReplace(Qt.resolvedUrl("../FirstPage.qml"))
-                    })
-                }
-            }
-            MenuItem {
-                text: qsTr("Manage Lists")
-                onClicked: pageStack.push(Qt.resolvedUrl("../ListManagePage.qml"))
-            }
-            MenuItem {
-                text: qsTr("Settings")
-                onClicked: pageStack.push(Qt.resolvedUrl("../SettingsPage.qml"))
-            }
-            MenuItem {
-                text: qsTr("Refresh")
-                onClicked: {
-                    profileView.loadProfile()
-                    profileView.loadFeed(true)
-                }
-            }
-        }
-
-        onContentYChanged: {
-            if (!feedBusy && nextCursor.length > 0 && nextCursor !== lastLoadMoreCursor
-                && (profileView.currentSection === "posts" || profileView.currentSection === "likes"
-                    || profileView.currentSection === "bookmarks")
-                && contentY + height > contentHeight - Theme.itemSizeLarge * 3) {
-                lastLoadMoreCursor = nextCursor
-                profileView.loadFeed(false)
-            }
-        }
-
-        delegate: PostDelegate {}
-
-        VerticalScrollDecorator {}
-
-        ViewPlaceholder {
-            enabled: errorText.length > 0
-            text: qsTr("Couldn't load profile")
-            hintText: errorText
-        }
-
-        ViewPlaceholder {
-            // no content to show
-            enabled: !profileView.busy && errorText.length === 0
-                && profileView.currentSection !== "posts" && profileView.currentSection !== "likes"
-                && profileView.currentSection !== "bookmarks"
-            text: profileView.sectionLabel(profileView.currentSection)
-            hintText: qsTr("Not available yet")
-        }
+        )
     }
 
-    BusyIndicator {
-        anchors.centerIn: parent
-        running: profileView.busy || (feedBusy && postsModel.count === 0)
-        visible: running
-        size: BusyIndicatorSize.Large
+    property bool tabBarHidden: false
+    property bool stripHidden: false
+
+    Connections {
+        target: carouselLoader.item ? carouselLoader.item.slideshow.currentItem : null
+        ignoreUnknownSignals: true
+        onTabBarHiddenChanged: {
+            profileView.tabBarHidden = carouselLoader.item.slideshow.currentItem.tabBarHidden
+            profileView.stripHidden = carouselLoader.item.slideshow.currentItem.tabBarHidden
+        }
     }
 
     // Staggered fetch
@@ -158,32 +135,8 @@ Item {
         repeat: false
         onTriggered: {
             profileView.loadProfile()
-            profileView.loadFeed(true)
+            profileView.loadSection("posts", true)
         }
-    }
-
-    function sectionLabel(key) {
-        switch (key) {
-        case "posts": return qsTr("Posts")
-        case "replies": return qsTr("Replies")
-        case "media": return qsTr("Media")
-        case "videos": return qsTr("Videos")
-        case "likes": return qsTr("Likes")
-        case "bookmarks": return qsTr("Bookmarks")
-        case "lists": return qsTr("Lists")
-        default: return key
-        }
-    }
-
-    // Called by MainPage after it switches the picker attach, nicer would be a carousel...
-    function switchSection(section) {
-        if (section === profileView.currentSection)
-            return
-        profileView.currentSection = section
-        postsModel.clear()
-        listView.scrollToTop()
-        if (section === "posts" || section === "likes" || section === "bookmarks")
-            loadFeed(true)
     }
 
     function loadProfile() {
@@ -228,69 +181,273 @@ Item {
         )
     }
 
-    function loadFeed(reset) {
-        var session = SessionManager.getSession()
-        if ((feedBusy && !reset) || !session)
-            return
-        if (currentSection !== "posts" && currentSection !== "likes" && currentSection !== "bookmarks")
-            return
-
-        feedBusy = true
-        if (reset) {
-            feedError = ""
-            nextCursor = ""
-            lastLoadMoreCursor = ""
-        }
-
-        var requestedSection = currentSection
-
-        // Note: Mastodon has no per-account "likes"/"bookmarks" endpoint
-        var path
-        if (currentSection === "likes")
-            path = "/api/v1/favourites?limit=30"
-        else if (currentSection === "bookmarks")
-            path = "/api/v1/bookmarks?limit=30"
-        else
-            path = "/api/v1/accounts/" + encodeURIComponent(session.accountId) + "/statuses?limit=30"
-        if (!reset && nextCursor.length > 0)
-            path += "&max_id=" + encodeURIComponent(nextCursor)
-
-        SessionManager.authenticatedRequest("GET", path, null,
-            function(response, linkHeader) {
-                var statuses = response || []
-                var parsedCursor = PostMapper.parseNextCursor(linkHeader)
-
-                FeedsManager.mapStatusesAsync(statuses, function(rows) {
-                    feedBusy = false
-
-                    if (profileView.currentSection !== requestedSection) {
-                        console.log("[Profile] discarding stale response for", requestedSection)
-                        return
-                    }
-
-                    if (reset)
-                        postsModel.clear()
-
-                    for (var i = 0; i < rows.length; i++)
-                        postsModel.append(rows[i])
-
-                    nextCursor = parsedCursor
-                })
-            },
-            function(status, message) {
-                feedBusy = false
-                if (status === 401) {
-                    SessionManager.clearSession()
-                    pageStack.animatorReplace(Qt.resolvedUrl("../FirstPage.qml"))
-                } else {
-                    feedError = qsTr("Couldn't load (%1)").arg(message || status)
-                }
-            }
-        )
+    function scrollToTop() {
+        if (carouselLoader.item && carouselLoader.item.slideshow.currentItem)
+            carouselLoader.item.slideshow.currentItem.scrollToTop()
     }
 
-    function scrollToTop() {
-        listView.scrollToTop()
-        scrollTracker.reset()
+    ListModel {
+        id: sectionsModel
+        Component.onCompleted: {
+            append({ key: "posts", displayName: qsTr("Profile") })
+            append({ key: "likes", displayName: qsTr("Favourites") })
+            append({ key: "bookmarks", displayName: qsTr("Bookmarks") })
+        }
+    }
+
+    Loader {
+        id: carouselLoader
+        anchors.fill: parent
+        active: profileView.profileReady
+        sourceComponent: carouselComponent
+    }
+
+    Component {
+        id: carouselComponent
+
+        Item {
+            id: carouselRoot
+            anchors.fill: parent
+
+            property alias slideshow: slideshow
+
+            property bool anyVideoExpanded: false
+            readonly property bool topStripShouldShow: !anyVideoExpanded && !profileView.stripHidden
+
+            onTopStripShouldShowChanged: {
+                if (topStripShouldShow)
+                    tabStripPanel.show()
+                else
+                    tabStripPanel.hide()
+            }
+
+            Component.onCompleted: {
+                VideoExpansionTracker.subscribe(function(expanded) {
+                    carouselRoot.anyVideoExpanded = expanded
+                })
+                // Explicit initial call
+                if (topStripShouldShow)
+                    tabStripPanel.show()
+                else
+                    tabStripPanel.hide()
+            }
+
+            Component {
+                id: profileHeaderComponent
+
+                Column{
+                    spacing: Theme.paddingMedium
+                    ProfileHeader {
+                        did: profileView.did
+                        displayName: profileView.displayName
+                        emojisJson: profileView.emojisJson
+                        handle: profileView.handle
+                        avatarUrl: profileView.avatarUrl
+                        bannerUrl: profileView.bannerUrl
+                        bio: profileView.bio
+                        followersCount: profileView.followersCount
+                        followsCount: profileView.followsCount
+                        postsCount: profileView.postsCount
+                        isBot: profileView.isBot
+                        isLocked: profileView.isLocked
+                        createdAt: profileView.createdAt
+                        fieldsList: profileView.fieldsList
+                        currentUserDid: SessionManager.getCurrentUserId()
+                    }
+                    SectionHeader {
+                        text: "Activity"
+                    }
+                }
+            }
+
+            SlideshowView {
+                id: slideshow
+                anchors {
+                    top: parent.top
+                    topMargin: tabStripPanel.visibleSize
+                    left: parent.left
+                    right: parent.right
+                    bottom: parent.bottom
+                }
+                clip: true
+                model: sectionsModel
+
+                delegate: Item {
+                    id: sectionPane
+                    width: slideshow.width
+                    height: slideshow.height
+
+                    readonly property string sectionKey: model.key
+                    readonly property var content: profileView.getSectionContent(sectionKey, profileView)
+                    readonly property bool isCurrent: !PathView.view || PathView.isCurrentItem
+
+                    property bool busy: false
+                    property string errorText: ""
+
+                    ScrollDirectionTracker {
+                        id: scrollTracker
+                        target: innerList
+                    }
+                    property alias tabBarHidden: scrollTracker.hidden
+
+                    function checkLoad() {
+                        if (isCurrent && !content.loadedOnce && !content.busy)
+                            load(true)
+                    }
+                    onIsCurrentChanged: checkLoad()
+                    Component.onCompleted: checkLoad()
+
+                    function load(reset) {
+                        if (busy && !reset)
+                            return
+
+                        busy = true
+                        if (reset)
+                            errorText = ""
+
+                        profileView.loadSection(sectionKey, reset, function(success, message, status) {
+                            busy = false
+                            if (!success)
+                                errorText = qsTr("Couldn't load (%1)").arg(message || status)
+                        })
+                    }
+
+                    function scrollToTop() {
+                        innerList.scrollToTop()
+                        scrollTracker.reset()
+                    }
+
+                    SilicaListView {
+                        id: innerList
+                        anchors.fill: parent
+                        model: sectionPane.content.model
+                        // Only the Posts pane gets ProfileHeader
+                        header: Loader {
+                            width: innerList.width
+                            sourceComponent: sectionPane.sectionKey === "posts" ? profileHeaderComponent : null
+                        }
+
+                        PullDownMenu {
+                            busy: sectionPane.busy
+                            opacity: (sectionPane.sectionKey === "posts") ? 1: active ? 1 : 0
+                            MenuItem {
+                                text: qsTr("Log out")
+                                visible: (sectionPane.sectionKey === "posts")
+                                onClicked: {
+                                    Remorse.popupAction(sectionPane, qsTr("Logging out"), function() {
+                                        SessionManager.clearSession()
+                                        pageStack.animatorReplace(Qt.resolvedUrl("../FirstPage.qml"))
+                                    })
+                                }
+                            }
+                            MenuItem {
+                                text: qsTr("Manage Lists")
+                                onClicked: pageStack.push(Qt.resolvedUrl("../ListManagePage.qml"))
+                                visible: (sectionPane.sectionKey === "posts")
+                            }
+                            MenuItem {
+                                text: qsTr("Settings")
+                                onClicked: pageStack.push(Qt.resolvedUrl("../SettingsPage.qml"))
+                                visible: (sectionPane.sectionKey === "posts")
+                            }
+                            MenuItem {
+                                text: qsTr("Refresh")
+                                onClicked: {
+                                    if (sectionPane.sectionKey === "posts")
+                                        profileView.loadProfile()
+                                    sectionPane.load(true)
+                                }
+                            }
+                        }
+
+                        function checkLoadMore() {
+                            if (!sectionPane.busy && sectionPane.content.nextCursor.length > 0
+                                && sectionPane.content.nextCursor !== sectionPane.content.lastLoadMoreCursor && atYEnd) {
+                                sectionPane.content.lastLoadMoreCursor = sectionPane.content.nextCursor
+                                sectionPane.load(false)
+                            }
+                        }
+                        onAtYEndChanged: checkLoadMore()
+                        onMovementEnded: checkLoadMore()
+
+                        delegate: PostDelegate {}
+
+                        VerticalScrollDecorator {}
+
+                        ViewPlaceholder {
+                            enabled: !sectionPane.busy && innerList.count === 0
+                                && sectionPane.errorText.length === 0
+                            text: qsTr("Nothing here yet")
+                        }
+
+                        ViewPlaceholder {
+                            enabled: sectionPane.errorText.length > 0
+                            text: qsTr("Couldn't load")
+                            hintText: sectionPane.errorText
+                        }
+                    }
+
+                    BusyIndicator {
+                        anchors.centerIn: parent
+                        running: sectionPane.busy && innerList.count === 0
+                        visible: running
+                        size: BusyIndicatorSize.Large
+                    }
+
+                    BusyIndicator {
+                        anchors {
+                            horizontalCenter: parent.horizontalCenter
+                            top: parent.top
+                            topMargin: Theme.paddingMedium
+                        }
+                        running: sectionPane.busy && innerList.count > 0
+                        visible: running
+                        size: BusyIndicatorSize.Small
+                    }
+                }
+
+                onCurrentIndexChanged: {
+                    if (tabStrip.currentIndex !== currentIndex)
+                        tabStrip.currentIndex = currentIndex
+
+                    profileView.stripHidden = false
+                    tabStripPanel.show()
+                }
+            }
+
+            DockedPanel {
+                id: tabStripPanel
+                width: parent.width
+                height: tabStrip.height
+                dock: Dock.Top
+                open: true
+                background: null
+
+                FeedTabStrip {
+                    id: tabStrip
+                    width: parent.width
+                    isPortrait: profileView.isPortrait
+                    model: sectionsModel
+                    onCurrentIndexChanged: {
+                        if (slideshow.currentIndex !== currentIndex)
+                            slideshow.currentIndex = currentIndex
+                    }
+                }
+            }
+        }
+    }
+
+    BusyIndicator {
+        anchors.centerIn: parent
+        running: !profileView.profileReady && profileView.errorText.length === 0
+        visible: running
+        size: BusyIndicatorSize.Large
+    }
+
+    ViewPlaceholder {
+        anchors.fill: parent
+        enabled: !profileView.profileReady && profileView.errorText.length > 0
+        text: qsTr("Couldn't load profile")
+        hintText: profileView.errorText
     }
 }

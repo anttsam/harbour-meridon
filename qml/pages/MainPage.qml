@@ -11,9 +11,6 @@ AppPage {
 
     backNavigation: false
 
-    // Only allow forward-swipe on the tab that actually has a picker
-    forwardNavigation: currentTab === 3
-
     property int currentTab: 0 // 0=Timeline 1=Search 2=Notifications 3=Profile
 
     // Glonbal hide-on-scroll-down/show-on-scroll-up tab bar (DockedPanel below),
@@ -39,68 +36,6 @@ AppPage {
         else
             tabBar.hide()
     }
-
-    // becaue MainPage owns all picker attach/detach directly ..
-    property bool pickerOpen: false
-    property string pendingPicker: "" // "profile" | ""
-
-    function requestProfilePicker() {
-        pendingPicker = "profile"
-        pickerStepTimer.restart()
-    }
-
-    // Used after a selection is made - close whatever's attached only
-    function closePickerOnly() {
-        pendingPicker = ""
-        pickerStepTimer.restart()
-    }
-
-    // Trying to avoid a pageStack operation while one is already in progress
-    // Actially should clean this up, and get rid of picker pages...
-    Timer {
-        id: pickerStepTimer
-        interval: 30
-        running: false
-        repeat: true
-        onTriggered: {
-            if (pageStack.busy)
-                return // something's still animating - check again next tick
-            if (pickerOpen) {
-                pickerOpen = false
-                pageStack.pop(pageStack.previousPage())
-                return
-            }
-
-            running = false
-
-            if (pendingPicker === "profile") {
-                var profilePicker = pageStack.pushAttached(Qt.resolvedUrl("ProfileSectionPickerPage.qml"), {
-                    currentSection: profileViewInstance.currentSection
-                })
-                pickerOpen = true
-                profilePicker.sectionSelected.connect(function(section) {
-                    if (section === "lists") {
-                        pageStack.navigateBack()
-                        pageStack.push(Qt.resolvedUrl("ListManagePage.qml"))
-                    } else {
-                        profileViewInstance.switchSection(section)
-                        pageStack.navigateBack()
-                    }
-                })
-            }
-
-            pendingPicker = ""
-        }
-    }
-
-    // On every tab switch: always tear down whatever's attached
-    onCurrentTabChanged: {
-        if (currentTab === 3)
-            requestProfilePicker()
-        else
-            closePickerOnly()
-    }
-
 
     Component.onCompleted: {
         if (!SessionManager.isLoggedIn())
@@ -160,7 +95,7 @@ AppPage {
             id: profileViewInstance
             anchors.fill: parent
             visible: mainPage.currentTab === 3
-            onRequestPicker: mainPage.requestProfilePicker()
+            isPortrait: mainPage.isPortrait
         }
     }
 
