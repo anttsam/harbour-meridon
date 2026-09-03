@@ -116,6 +116,40 @@ function setDirtyListener(fn) {
     dirty = false
 }
 
+var _removeListener = null
+
+// Called once by FeedCarouselView.qml's Component.onCompleted, alongside
+// setDirtyListener() above.
+function setRemoveListener(fn) {
+    _removeListener = fn
+}
+
+// For a feed the caller already knows LOCALLY should no longer be in the
+// carousel - dismiss/delete/unfollow all know exactly which id just
+// stopped belonging, so there's no need for a full loadFeeds() round-trip
+// (two GET requests, then feedsModel.clear() + rebuild of everything) just
+// to have the server tell us what we already know. Also handles the
+// evict-cached-content bookkeeping directly, same as loadFeeds()'s own
+// dropped-id diff, since a removed feed's content is exactly as stale as
+// a dismissed/unfollowed one's.
+function removeFeed(feedId) {
+    var idx = -1
+    for (var i = 0; i < feeds.length; i++) {
+        if (feeds[i].id === feedId) {
+            idx = i
+            break
+        }
+    }
+    if (idx === -1)
+        return
+
+    feeds.splice(idx, 1)
+    evictFeedContent(feedId)
+
+    if (_removeListener)
+        _removeListener(feedId)
+}
+
 // Registered as SessionManager's logout listener - without this, a relogin
 // reused feedContent entries whose ListModel died with the previous
 // session's FeedCarouselView (dead QObject refs).
@@ -124,8 +158,10 @@ function resetState() {
     currentFeed = null
     loaded = false
     feedContent = {}
+    _feedContentMRU = []
     dirty = false
     _dirtyListener = null
+    _removeListener = null
 }
 
 SessionManager.onLogout(resetState)
@@ -170,7 +206,33 @@ function isLoaded() {
 // exactly the delegate recreation this guard needs to survive.
 var feedContent = {} // feedId -> {model, busy, nextCursor, lastLoadMoreCursor, loadedOnce}
 
+// Recency cap on top of the dismiss/delete/unfollow eviction in loadFeeds()
+// below - that only handles a feed leaving getFeeds() entirely, but someone
+// following many lists/hashtags accumulates a live ListModel for every one
+// they've ever swiped to THIS SESSION even if most are pinned and never
+// revisited. "home" is exempt - it's the default landing feed, always
+// expected to be there instantly regardless of what else has been visited
+// since.
+var _feedContentMRU = [] // feed ids, most-recently-touched last
+var MAX_CACHED_FEEDS = 5
+
+function _touchFeedMRU(feedId) {
+    var idx = _feedContentMRU.indexOf(feedId)
+    if (idx !== -1)
+        _feedContentMRU.splice(idx, 1)
+    _feedContentMRU.push(feedId)
+
+    // "home" doesn't count against the cap and is never evicted - counting
+    // only the others means home being untouched for a while (globally the
+    // oldest entry) can't block eviction of everything newer than it.
+    var others = _feedContentMRU.filter(function(id) { return id !== "home" })
+    while (others.length > MAX_CACHED_FEEDS) {
+        evictFeedContent(others.shift())
+    }
+}
+
 function getFeedContent(feedId, anchor) {
+    _touchFeedMRU(feedId)
     if (!feedContent[feedId]) {
         feedContent[feedId] = {
             model: Qt.createQmlObject("import QtQuick 2.0; ListModel {}",
@@ -194,6 +256,43 @@ function getFeedContent(feedId, anchor) {
 // that feed hasn't actually been loaded by anything yet.
 function peekFeedContent(feedId) {
     return feedContent[feedId] || null
+}
+
+// Drops a feed's cached posts/model once it's no longer in getFeeds() (see
+// loadFeeds()'s finish(), the only real caller). The map entry is dropped
+// immediately so a fresh getFeedContent() call for the same id (e.g. the
+// user re-adds the same list/hashtag right after) starts clean rather than
+// racing this eviction, but the actual QObject destroy() is deferred by one
+// event-loop tick: a FeedPane whose delegate is still alive somewhere in the
+// carousel's SlideshowView cache (e.g. this feed was dismissed from
+// ListManagePage while its pane is still cached from an earlier swipe) may
+// still have listView.model bound to it until the carousel's own
+// populateFeeds() finishes reacting to the same feed list change - deferring
+// lets that settle first instead of freeing the model out from under a
+// still-bound view. Sailfish's Qt (5.6) predates Qt.callLater() (added in
+// 5.10), hence the zero-interval Timer instead - a QML type can't be
+// instantiated directly from a .pragma library, so it's built the same way
+// getFeedContent() builds its ListModels: via Qt.createQmlObject(), parented
+// to the model it's about to destroy so it's cleaned up right along with it.
+function evictFeedContent(feedId) {
+    var content = feedContent[feedId]
+    if (!content)
+        return
+
+    delete feedContent[feedId]
+    var mruIdx = _feedContentMRU.indexOf(feedId)
+    if (mruIdx !== -1)
+        _feedContentMRU.splice(mruIdx, 1)
+
+    console.log("[FeedsManager] evicting cached content for", feedId,
+        "(", content.model.count, "posts)")
+
+    var timer = Qt.createQmlObject(
+        "import QtQuick 2.0; Timer { interval: 0; running: true; repeat: false }",
+        content.model, "FeedContentEvictionTimer")
+    timer.triggered.connect(function() {
+        content.model.destroy()
+    })
 }
 
 // Fetches one page of a specific feed's posts (moved here from the old
@@ -223,16 +322,16 @@ function loadFeedContent(feed, reset, anchor, onDone) {
 
     var path
     if (feed.type === "local") {
-        path = "/api/v1/timelines/public?local=true&limit=40"
+        path = "/api/v1/timelines/public?local=true&limit=20"
     } else if (feed.type === "federated") {
-        path = "/api/v1/timelines/public?limit=40"
+        path = "/api/v1/timelines/public?limit=20"
     } else if (feed.type === "list") {
-        path = "/api/v1/timelines/list/" + encodeURIComponent(feed.value) + "?limit=40"
+        path = "/api/v1/timelines/list/" + encodeURIComponent(feed.value) + "?limit=20"
     } else if (feed.type === "hashtag") {
-        path = "/api/v1/timelines/tag/" + encodeURIComponent(feed.value) + "?limit=40"
+        path = "/api/v1/timelines/tag/" + encodeURIComponent(feed.value) + "?limit=20"
     } else {
         // "home" - the default/main timeline
-        path = "/api/v1/timelines/home?limit=40"
+        path = "/api/v1/timelines/home?limit=20"
     }
     if (!reset && content.nextCursor.length > 0)
         path += "&max_id=" + encodeURIComponent(content.nextCursor)
@@ -307,10 +406,28 @@ function loadFeeds(onDone) {
         if (pending > 0)
             return
 
+        var previousIds = {}
+        for (var pi = 0; pi < feeds.length; pi++)
+            previousIds[feeds[pi].id] = true
+
         feeds = pinned.concat(listRows || []).concat(hashtagRows || [])
         loaded = true
         if (!currentFeed)
             currentFeed = feeds[0]
+
+        // Anything that dropped out (dismissed, deleted, unfollowed) since
+        // the last loadFeeds() no longer needs its cached posts kept around.
+        // Best-effort: a cache-cleanup failure here must never be able to
+        // block onDone() below, or the carousel never hears feeds changed.
+        try {
+            for (var i = 0; i < feeds.length; i++)
+                delete previousIds[feeds[i].id]
+            for (var droppedId in previousIds)
+                evictFeedContent(droppedId)
+        } catch (e) {
+            console.warn("[FeedsManager] evicting stale feed content failed:", e)
+        }
+
         console.log("[FeedsManager] loaded", feeds.length, "feeds (",
             (listRows || []).length, "lists,", (hashtagRows || []).length, "hashtags )")
         onDone(true)

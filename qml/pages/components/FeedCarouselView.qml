@@ -96,6 +96,33 @@ Item {
         slideshow.currentIndex = startIndex
     }
 
+    // Surgical counterpart to populateFeeds() above, for a single feed
+    // already known to be gone (dismissed/deleted/unfollowed) rather than a
+    // full server resync - removes just that one row instead of clearing
+    // and rebuilding the whole model, which avoids churning every other
+    // slide's delegate through SlideshowView needlessly.
+    function removeFeedRow(feedId) {
+        var idx = indexOfId(feedId)
+        if (idx < 0)
+            return
+
+        var wasCurrent = slideshow.currentIndex === idx
+        var shiftedCurrent = slideshow.currentIndex > idx
+
+        feedsModel.remove(idx)
+
+        if (wasCurrent) {
+            var homeIdx = indexOfType("home")
+            var newIndex = homeIdx >= 0 ? homeIdx : 0
+            tabStrip.currentIndex = newIndex
+            slideshow.currentIndex = newIndex
+        } else if (shiftedCurrent) {
+            var shiftedIndex = slideshow.currentIndex - 1
+            tabStrip.currentIndex = shiftedIndex
+            slideshow.currentIndex = shiftedIndex
+        }
+    }
+
     function scrollToTop() {
         if (slideshow.currentItem)
             slideshow.currentItem.scrollToTop()
@@ -159,6 +186,9 @@ Item {
 
         FeedsManager.setDirtyListener(function() {
             feedCarouselView.refreshFeeds()
+        })
+        FeedsManager.setRemoveListener(function(feedId) {
+            feedCarouselView.removeFeedRow(feedId)
         })
         // Explicit initial call
         if (topStripShouldShow)

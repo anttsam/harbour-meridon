@@ -122,7 +122,16 @@ AppPage {
                    }
 
                    listManagePage.refreshDismissedIds()
-                   FeedsManager.markDirty()
+
+                   if (checked) {
+                       // R ask the server for current data rather
+                       FeedsManager.markDirty()
+                   } else {
+                       // known locally exactly just delete
+                       var feedId = itemDelegate.isList
+                           ? "list-" + model.itemId : "hashtag-" + model.itemId
+                       FeedsManager.removeFeed(feedId)
+                   }
                }
            }
 
@@ -260,12 +269,19 @@ AppPage {
 
         SessionManager.authenticatedRequest("POST", "/api/v1/lists", { title: title },
             function(response) {
-                listManagePage.load()
+                // markDirty() first - the carousel refresh must not be
+                // blocked by listManagePage.load() below throwing if this
+                // page has already been popped/torn down by the time this
+                // response lands (e.g. navigated away right after acting,
+                // without waiting around on this page). load() itself is
+                // then best-effort for the same reason - nothing left to
+                // refresh if the page is already gone.
                 FeedsManager.markDirty()
+                try { listManagePage.load() } catch (e) {}
             },
             function(status, message) {
                 console.warn("[ListManage] create failed:", status, message)
-                errorText = qsTr("Couldn't create list (%1)").arg(message || status)
+                try { errorText = qsTr("Couldn't create list (%1)").arg(message || status) } catch (e) {}
             }
         )
     }
@@ -276,12 +292,12 @@ AppPage {
 
         SessionManager.authenticatedRequest("PUT", "/api/v1/lists/" + encodeURIComponent(listId), { title: title },
             function(response) {
-                listManagePage.load()
                 FeedsManager.markDirty()
+                try { listManagePage.load() } catch (e) {}
             },
             function(status, message) {
                 console.warn("[ListManage] rename failed:", status, message)
-                errorText = qsTr("Couldn't rename list (%1)").arg(message || status)
+                try { errorText = qsTr("Couldn't rename list (%1)").arg(message || status) } catch (e) {}
             }
         )
     }
@@ -291,15 +307,29 @@ AppPage {
 
         SessionManager.authenticatedRequest("DELETE", "/api/v1/lists/" + encodeURIComponent(listId), null,
             function(response) {
-                // Tidy up a leftover dismissed-id entry
+                // Already known locally exactly which feed just stopped
+                // belonging - no server round-trip needed to remove it from
+                // the carousel, unlike markDirty()'s full loadFeeds() resync.
+                FeedsManager.removeFeed("list-" + listId)
+                // Tidy up a leftover dismissed-id entry - a plain storage
+                // write, safe regardless of whether this page still exists.
                 PinnedFeedsStorage.undismissList(listId)
-                refreshDismissedIds()
-                FeedsManager.markDirty()
+                // refreshDismissedIds() only updates this page's own
+                // displayed state - best-effort, since a slow response can
+                // land well after the user has swiped away and moved on to
+                // other feeds, by which point there's nothing left to
+                // refresh here.
+                try { refreshDismissedIds() } catch (e) {}
             },
             function(status, message) {
                 console.warn("[ListManage] delete failed:", status, message)
-                errorText = qsTr("Couldn't delete list (%1)").arg(message || status)
-                listManagePage.load() // restore the row since the delete didn't actually happen
+                // Same best-effort reasoning as the success path above -
+                // this page may already be gone by the time a failure comes
+                // back too.
+                try {
+                    errorText = qsTr("Couldn't delete list (%1)").arg(message || status)
+                    listManagePage.load() // restore the row since the delete didn't actually happen
+                } catch (e) {}
             }
         )
     }
@@ -312,12 +342,12 @@ AppPage {
         SessionManager.authenticatedRequest("POST",
             "/api/v1/tags/" + encodeURIComponent(normalized) + "/follow", {},
             function(response) {
-                listManagePage.load()
                 FeedsManager.markDirty()
+                try { listManagePage.load() } catch (e) {}
             },
             function(status, message) {
                 console.warn("[ListManage] follow hashtag failed:", status, message)
-                errorText = qsTr("Couldn't follow #%1 (%2)").arg(normalized).arg(message || status)
+                try { errorText = qsTr("Couldn't follow #%1 (%2)").arg(normalized).arg(message || status) } catch (e) {}
             }
         )
     }
@@ -328,12 +358,14 @@ AppPage {
         SessionManager.authenticatedRequest("POST",
             "/api/v1/tags/" + encodeURIComponent(name) + "/unfollow", {},
             function(response) {
-                FeedsManager.markDirty()
+                FeedsManager.removeFeed("hashtag-" + name)
             },
             function(status, message) {
                 console.warn("[ListManage] unfollow hashtag failed:", status, message)
-                errorText = qsTr("Couldn't unfollow #%1 (%2)").arg(name).arg(message || status)
-                listManagePage.load() // restore the row since the unfollow didn't actually happen
+                try {
+                    errorText = qsTr("Couldn't unfollow #%1 (%2)").arg(name).arg(message || status)
+                    listManagePage.load() // restore the row since the unfollow didn't actually happen
+                } catch (e) {}
             }
         )
     }
