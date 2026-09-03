@@ -44,7 +44,7 @@ AppPage {
 
                 AppLabel {
                     useCustomFont: true
-                    text: qsTr("Version %1").arg("1.2")
+                    text: qsTr("Version %1").arg("1.3")
                     color: palette.secondaryHighlightColor
                     font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
                     anchors.horizontalCenter: parent.horizontalCenter
