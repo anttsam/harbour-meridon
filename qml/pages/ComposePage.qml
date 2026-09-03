@@ -480,6 +480,8 @@ FullscreenContentPage {
                                 source: model.kind === "image" ? attachmentItem.displaySource : ""
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
+                                sourceSize.width: attachmentItem.width
+                                sourceSize.height: attachmentItem.height
                             }
 
                             // Video/audio have no still frame , just show some icon instead

@@ -49,6 +49,11 @@ Item {
         fillMode: Image.PreserveAspectCrop
         smooth: true
         asynchronous: true
+        // Caps decode to what's actually shown - avatars can come back from
+        // the server much larger than root.size, and without this Qt decodes
+        // at the source's native resolution before scaling down for display.
+        sourceSize.width: root.size
+        sourceSize.height: root.size
         visible: false // OpacityMask
 
         onStatusChanged: {

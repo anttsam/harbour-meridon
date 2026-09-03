@@ -1,6 +1,6 @@
 import QtQuick 2.0
 
-// Subtle background grain, not sure is this looks good
+// Subtle background grain, not sure if this looks good
 Image {
     property real strength: 0.06
 

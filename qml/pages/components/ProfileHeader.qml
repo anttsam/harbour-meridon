@@ -79,6 +79,8 @@ Column {
             clip: true
             visible: profileHeader.bannerUrl.length > 0
             asynchronous: true
+            sourceSize.width: width
+            sourceSize.height: height
         }
 
 

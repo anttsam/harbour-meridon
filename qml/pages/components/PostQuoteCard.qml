@@ -79,6 +79,8 @@ Item {
                 fillMode: Image.PreserveAspectCrop
                 clip: true
                 asynchronous: true
+                sourceSize.width: width
+                sourceSize.height: height
             }
         }
     }

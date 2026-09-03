@@ -37,6 +37,11 @@ Rectangle {
                 source: postLinkCard.link ? postLinkCard.link.thumbUrl : ""
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
+                // card.image is an arbitrary external site's OpenGraph image,
+                // not sized by Mastodon the way media previews are - cap
+                // decode to the card's own thumbnail area.
+                sourceSize.width: linkThumbContainer.width
+                sourceSize.height: linkThumbContainer.height
                 visible: false // only rendered as OpacityMask's source below
 
                 onStatusChanged: {
