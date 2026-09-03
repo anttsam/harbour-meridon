@@ -8,6 +8,9 @@ Grid {
 
     property var images: []
 
+    // limit the height of extreme heigh image
+    readonly property real maxCellAspectRatio: 1.5
+
     visible: images.length > 0
     columns: images.length > 1 ? 2 : 1
     spacing: Theme.paddingSmall
@@ -20,10 +23,13 @@ Grid {
             width: imageGrid.columns === 1
                 ? imageGrid.width
                 : (imageGrid.width - imageGrid.spacing) / 2
-            height: width / modelData.aspectRatio
-            fillMode: Image.PreserveAspectFit // never crops
+            height: Math.min(width / modelData.aspectRatio, width * imageGrid.maxCellAspectRatio)
+            fillMode: Image.PreserveAspectCrop
             clip: true
             asynchronous: true
+            // Caps decode to grid size - fullsize viewing in ImageViewerPage
+            sourceSize.width: width
+            sourceSize.height: height
             source: modelData.thumbUrl
 
             onStatusChanged: {
