@@ -1,3 +1,7 @@
+* Fri Sep 04 2026 anttsam <sami@anttila.ch> 1.3.1-1
+- Fix photo/video/audio pickers failing to open
+- Fix search results claiming there's more to load when there isn't
+
 * Thu Sep 03 2026 anttsam <sami@anttila.ch> 1.3-1
 - Profile: Likes and Bookmarks are now swipeable tabs alongside your posts
 - Emoji picker: faster, lower memory, quick-jump to a category
