@@ -277,7 +277,7 @@ Item {
         }
 
         var path = "/api/v2/search?q=" + encodeURIComponent(query)
-            + "&type=statuses&limit=30&offset=" + resultsModel.count
+            + "&type=statuses&limit=40&offset=" + resultsModel.count
 
         console.log("[Search] querying:", query,
             reset ? "(new search)" : "(load more)")
@@ -293,7 +293,12 @@ Item {
                     resultsModel.append(PostMapper.mapStatus(statuses[i], PostMapper.formatTimeAgo))
                 }
 
-                hasMore = statuses.length > 0
+                // Mastodon seems to be not returning more search results
+                // reliably - offset pagination on statuses search tends to
+                // just re-return the same top results regardless of offset,
+                // so don't pretend this paginates. Fetch the max page size
+                // up front instead and stop there.
+                hasMore = false
             },
             function(status, message) {
                 busy = false
