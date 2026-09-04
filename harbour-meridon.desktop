@@ -18,7 +18,7 @@ OrganizationName=org.anttsam
 # ApplicationName does not have to be identical to Name
 ApplicationName=meridon
 # Add the required permissions here
-Permissions=Internet;Audio
+Permissions=Internet;Audio;UserDirs;MediaIndexing;RemovableMedia
 
 # Lets sailjaild auto-manage a D-Bus activation service for this app,
 # named exactly OrganizationName.ApplicationName (org.anttsam.meridon) -
