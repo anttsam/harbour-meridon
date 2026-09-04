@@ -268,7 +268,7 @@ Dialog {
                     Image {
                         anchors.centerIn: parent
                         source: modelData.iconSource.length > 0 ? modelData.iconSource : modelData.imageUrl
-                        width: modelData.iconSource.length > 0 ? Theme.iconSizeSmall : Theme.iconSizeMedium
+                        width:Theme.iconSizeMedium
                         height: width
                         asynchronous: true
                         sourceSize.width: width
