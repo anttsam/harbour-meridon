@@ -350,11 +350,11 @@ FullscreenContentPage {
             top: quotePreview.bottom
             left: parent.left
             right: parent.right
-            bottom: parent.bottom
+            bottom: bottomPanel.top
         }
+        clip: true
 
         contentHeight: composeRow.height + cwField.height + privacySelector.height + Theme.paddingLarge
-        bottomMargin: bottomPanel.height
 
         ComboBox {
             id: privacySelector
@@ -557,12 +557,24 @@ FullscreenContentPage {
         }
     }
 
-    DockedPanel {
+    // A plain anchored Item, not a DockedPanel - matching harbour-sailsky's
+    // ComposePage (footerRow), which has no overlap/cursor-visibility issues
+    // at all. A DockedPanel re-parents itself onto a non-resizing window-
+    // level item and positions itself via animated x/y rather than normal
+    // anchors, which both fights with flick's own anchors.bottom: bottomPanel.top
+    // above and confuses PageStack's own height tracking. Since this toolbar
+    // has its own real space here (flick's viewport genuinely ends above
+    // it, no floating overlay to work around), Silica's built-in
+    // cursor-follows-keyboard behavior for postField just works correctly
+    // on its own - no bottomMargin or manual scroll nudging needed.
+    Item {
         id: bottomPanel
-        width: parent.width
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
         height: actionsRow.height + toolsRow.height
-        dock: Dock.Bottom
-        open: true
 
         NoiseOverlay {
             anchors.fill: parent
