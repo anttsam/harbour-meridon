@@ -157,7 +157,7 @@ AppPage {
                     AppLabel {
                         useCustomFont: true
                         width: parent.width
-                        text: qsTr("Fonts: Fira Sans, Inter, Open Sans, Roboto, Ubuntu")
+                        text: qsTr("Fonts: Fira Sans, Inter, Open Sans, Roboto")
                         wrapMode: Text.Wrap
                         font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
                     }

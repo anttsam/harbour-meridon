@@ -184,7 +184,7 @@ function flagPairs() {
 
 // Group + CLDR short name per codepoint, generated from the same
 // emoji-test.txt source as codepoints()/flagPairs() above - used by
-// EmojiPickerDialog.qml for category section headers and search-by-name
+// EmojiPickerPage.qml for category section headers and search-by-name
 // filtering. Kept separate rather than restructuring codepoints()/
 // flagPairs() themselves, since EmojiManager.qml depends on those
 // staying flat arrays in their current order.

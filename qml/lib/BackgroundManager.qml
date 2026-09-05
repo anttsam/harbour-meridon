@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import "FontPreferenceStorage.js" as FontPreferenceStorage
+import "PreferenceStorage.js" as PreferenceStorage
 
 // App-wide page background tint, applied via AppPage.qml
 
@@ -45,47 +45,47 @@ QtObject {
 
     function selectOpacity(value) {
         backgroundManager.opacity = value
-        FontPreferenceStorage.saveBackgroundOpacity(value)
+        PreferenceStorage.saveBackgroundOpacity(value)
     }
 
     function selectColorKey(key) {
         backgroundManager.colorKey = key
-        FontPreferenceStorage.saveBackgroundColorKey(key)
+        PreferenceStorage.saveBackgroundColorKey(key)
     }
 
     function selectHighlightKey(key) {
         backgroundManager.highlightKey = key
-        FontPreferenceStorage.saveHighlightKey(key)
+        PreferenceStorage.saveHighlightKey(key)
     }
 
     function selectAffectCover(enabled) {
         backgroundManager.affectCover = enabled
-        FontPreferenceStorage.saveAffectCover(enabled)
+        PreferenceStorage.saveAffectCover(enabled)
     }
 
     function selectAffectTabBar(enabled) {
         backgroundManager.affectTabBar = enabled
-        FontPreferenceStorage.saveAffectTabBar(enabled)
+        PreferenceStorage.saveAffectTabBar(enabled)
     }
 
     Component.onCompleted: {
-        var saved = FontPreferenceStorage.loadBackgroundOpacity()
+        var saved = PreferenceStorage.loadBackgroundOpacity()
         if (saved !== "")
             backgroundManager.opacity = parseFloat(saved)
 
-        var savedColorKey = FontPreferenceStorage.loadBackgroundColorKey()
+        var savedColorKey = PreferenceStorage.loadBackgroundColorKey()
         if (savedColorKey !== "")
             backgroundManager.colorKey = savedColorKey
 
-        var savedHighlightKey = FontPreferenceStorage.loadHighlightKey()
+        var savedHighlightKey = PreferenceStorage.loadHighlightKey()
         if (savedHighlightKey !== "")
             backgroundManager.highlightKey = savedHighlightKey
 
-        var savedAffectCover = FontPreferenceStorage.loadAffectCover()
+        var savedAffectCover = PreferenceStorage.loadAffectCover()
         if (savedAffectCover !== "")
             backgroundManager.affectCover = savedAffectCover === "1"
 
-        var savedAffectTabBar = FontPreferenceStorage.loadAffectTabBar()
+        var savedAffectTabBar = PreferenceStorage.loadAffectTabBar()
         if (savedAffectTabBar !== "")
             backgroundManager.affectTabBar = savedAffectTabBar === "1"
     }

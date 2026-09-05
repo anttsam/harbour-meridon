@@ -50,7 +50,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/pages/WebViewPage.qml \
     qml/pages/components/AppLabel.qml \
     qml/pages/components/AppPage.qml \
-    qml/pages/components/EmojiPickerDialog.qml \
+    qml/pages/components/EmojiPickerPage.qml \
     qml/pages/components/NoiseOverlay.qml \
     qml/pages/components/noise.png \
     qml/pages/components/FeedCarouselView.qml \
@@ -81,7 +81,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/lib/emoji/*.png \
     qml/lib/flags/*.png \
     qml/lib/FontManager.qml \
-    qml/lib/FontPreferenceStorage.js \
+    qml/lib/PreferenceStorage.js \
     qml/lib/HttpClient.js \
     qml/lib/InstanceAppStorage.js \
     qml/lib/LinkHandler.js \
@@ -94,6 +94,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/lib/TokenStorage.js \
     qml/lib/UrlRouter.js \
     qml/lib/VideoExpansionTracker.js \
+    qml/lib/VideoManager.qml \
     qml/lib/qmldir \
     qml/fonts/FiraSans-Bold.ttf \
     qml/fonts/FiraSans-Light.ttf \
@@ -105,16 +106,12 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/fonts/OFL-Inter.txt \
     qml/fonts/OFL-OpenSans.txt \
     qml/fonts/OFL-Roboto.txt \
-    qml/fonts/OFL-Ubuntu.txt \
     qml/fonts/OpenSans-Bold.ttf \
     qml/fonts/OpenSans-Light.ttf \
     qml/fonts/OpenSans-Regular.ttf \
     qml/fonts/Roboto-Bold.ttf \
     qml/fonts/Roboto-Light.ttf \
     qml/fonts/Roboto-Regular.ttf \
-    qml/fonts/Ubuntu-Bold.ttf \
-    qml/fonts/Ubuntu-Light.ttf \
-    qml/fonts/Ubuntu-Regular.ttf \
     rpm/harbour-meridon.changes.in \
     rpm/harbour-meridon.changes.run.in \
     rpm/harbour-meridon.spec \

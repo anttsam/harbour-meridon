@@ -692,9 +692,9 @@ FullscreenContentPage {
                     id: emojiMouseArea
                     anchors.fill: parent
                     onClicked: {
-                        var dialog = pageStack.push(Qt.resolvedUrl("components/EmojiPickerDialog.qml"))
-                        dialog.accepted.connect(function() {
-                            composePage.insertAtCursor(dialog.insertText)
+                        var picker = pageStack.push(Qt.resolvedUrl("components/EmojiPickerPage.qml"))
+                        picker.emojiInserted.connect(function(text) {
+                            composePage.insertAtCursor(text)
                         })
                     }
                 }

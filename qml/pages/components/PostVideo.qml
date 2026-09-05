@@ -2,6 +2,7 @@ import QtQuick 2.0
 import QtMultimedia 5.6
 import Sailfish.Silica 1.0
 import "../../lib/VideoExpansionTracker.js" as VideoExpansionTracker
+import "../../lib" as AppLib
 
 // Two-stage tap-to-play/expand video player
 
@@ -29,7 +30,54 @@ Item {
         if (!appActive) {
             postVideo.expanded = false
             postVideo.playing = false
+        } else {
+            postVideo.updateGifAutoplay()
         }
+    }
+
+    // Autoplay/pause a GIF as it scrolls in and out of the viewport - unlike
+    // a real video (deliberately tap-to-play, since starting a decoder for
+    // every visible post would be costly), a GIF attachment is meant to
+    // play immediately like an animated image. Still gated on visibility
+    // rather than "always on" so scrolling past several GIFs in a row
+    // doesn't leave every one of them decoding in the background at once.
+    // Computed imperatively (not a declarative binding) to match
+    // ScrollDirectionTracker.qml's own proven pattern for reacting to
+    // contentY on this Qt version.
+    function updateGifAutoplay() {
+        if (!AppLib.VideoManager.autoplayGifs
+            || !postVideo.video || !postVideo.video.isGif || postVideo.expanded)
+            return
+
+        var view = postVideo.ListView.view
+        if (!view) {
+            postVideo.playing = true
+            return
+        }
+
+        var pos = postVideo.mapToItem(view.contentItem, 0, 0)
+        var itemTop = pos.y
+        var itemBottom = itemTop + postVideo.height
+        var viewTop = view.contentY
+        var viewBottom = viewTop + view.height
+        var isVisible = itemBottom > viewTop && itemTop < viewBottom
+
+        if (isVisible && !postVideo.playing)
+            postVideo.playing = true
+        else if (!isVisible && postVideo.playing)
+            postVideo.playing = false
+    }
+    Component.onCompleted: updateGifAutoplay()
+
+    Connections {
+        target: postVideo.ListView.view
+        ignoreUnknownSignals: true
+        onContentYChanged: postVideo.updateGifAutoplay()
+    }
+
+    Connections {
+        target: AppLib.VideoManager
+        onAutoplayGifsChanged: postVideo.updateGifAutoplay()
     }
 
     property real expandOffsetX: 0
@@ -184,7 +232,13 @@ Item {
                 postVideo.playing = true
             else {
                 postVideo.expanded = !postVideo.expanded
-                if (!postVideo.expanded) postVideo.playing = false
+                if (!postVideo.expanded) {
+                    postVideo.playing = false
+                    // Resume ambient GIF autoplay if still visible - unlike
+                    // the explicit stop button below, collapsing isn't
+                    // meant to stop playback for good.
+                    postVideo.updateGifAutoplay()
+                }
             }
         }
     }

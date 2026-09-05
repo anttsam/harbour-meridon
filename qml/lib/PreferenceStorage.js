@@ -262,3 +262,28 @@ function loadAffectTabBar() {
 
     return result
 }
+
+function saveAutoplayGifs(enabled) {
+    var db = getDatabase()
+    db.transaction(function(tx) {
+        ensureTable(tx)
+        tx.executeSql(
+            "INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)",
+            ["autoplayGifs", enabled ? "1" : "0"])
+    })
+}
+
+// Returns "" if nothing has been saved yet.
+function loadAutoplayGifs() {
+    var db = getDatabase()
+    var result = ""
+
+    db.transaction(function(tx) {
+        ensureTable(tx)
+        var rs = tx.executeSql("SELECT value FROM preferences WHERE key = ?", ["autoplayGifs"])
+        if (rs.rows.length > 0)
+            result = rs.rows.item(0).value
+    })
+
+    return result
+}

@@ -9,7 +9,6 @@ AppPage {
 
     property var fontKeys: [
         AppLib.FontManager.keyDefault,
-        AppLib.FontManager.keyUbuntu,
         AppLib.FontManager.keyFiraSans,
         AppLib.FontManager.keyOpenSans,
         AppLib.FontManager.keyRoboto,
@@ -84,6 +83,22 @@ AppPage {
                 onCheckedChanged: AppLib.EmojiManager.selectRenderEmojis(checked)
             }
 
+            TextSwitch {
+                id: autoplayGifsSwitch
+                width: parent.width
+                text: qsTr("Autoplay GIFs")
+                description: qsTr("Plays GIF attachments automatically as they scroll into view, without needing a tap first.")
+                checked: AppLib.VideoManager.autoplayGifs
+                onCheckedChanged: AppLib.VideoManager.selectAutoplayGifs(checked)
+                Connections {
+                    target: AppLib.VideoManager
+                    onAutoplayGifsChanged: {
+                        if (autoplayGifsSwitch.checked !== AppLib.VideoManager.autoplayGifs)
+                            autoplayGifsSwitch.checked = AppLib.VideoManager.autoplayGifs
+                    }
+                }
+            }
+
             SectionHeader { text: qsTr("Theme") }
 
             ComboBox {
@@ -146,11 +161,6 @@ AppPage {
 
                 menu: ContextMenu {
                     MenuItem { text: qsTr("Default") }
-                    MenuItem {
-                        text: qsTr("Ubuntu")
-                        font.family: settingsPage.previewFamily(AppLib.FontManager.keyUbuntu)
-                        font.weight: AppLib.FontManager.activeFontWeight
-                    }
                     MenuItem {
                         text: qsTr("Fira Sans")
                         font.family: settingsPage.previewFamily(AppLib.FontManager.keyFiraSans)

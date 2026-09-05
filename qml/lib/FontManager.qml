@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import "FontPreferenceStorage.js" as FontPreferenceStorage
+import "PreferenceStorage.js" as PreferenceStorage
 
 // App-wide font choice, applied to body text (AppLabel.qml) only - Silica's
 // built-in widgets (Button, TextField, PageHeader, ...) have no support
@@ -10,7 +10,6 @@ QtObject {
     id: fontManager
 
     readonly property string keyDefault: "default"
-    readonly property string keyUbuntu: "ubuntu"
     readonly property string keyFiraSans: "firasans"
     readonly property string keyOpenSans: "opensans"
     readonly property string keyRoboto: "roboto"
@@ -33,7 +32,6 @@ QtObject {
 
     function familyForKey(key) {
         switch (key) {
-        case keyUbuntu: return ubuntuRegular.name || Theme.fontFamily
         case keyFiraSans: return firaSansRegular.name || Theme.fontFamily
         case keyOpenSans: return openSansRegular.name || Theme.fontFamily
         case keyRoboto: return robotoRegular.name || Theme.fontFamily
@@ -43,7 +41,6 @@ QtObject {
     }
     function lightFamilyForKey(key) {
         switch (key) {
-        case keyUbuntu: return ubuntuLight.status === FontLoader.Ready ? "Ubuntu Light" : familyForKey(key)
         case keyFiraSans: return firaSansLight.status === FontLoader.Ready ? "Fira Sans Light" : familyForKey(key)
         case keyOpenSans: return openSansLight.status === FontLoader.Ready ? "Open Sans Light" : familyForKey(key)
         case keyRoboto: return robotoLight.name || familyForKey(key)
@@ -63,18 +60,6 @@ QtObject {
             console.warn("[FontManager] failed to load font:", label)
     }
 
-    property FontLoader ubuntuRegular: FontLoader {
-        source: "../fonts/Ubuntu-Regular.ttf"
-        onStatusChanged: fontManager.logFontStatus(ubuntuRegular, "Ubuntu Regular")
-    }
-    property FontLoader ubuntuBold: FontLoader {
-        source: "../fonts/Ubuntu-Bold.ttf"
-        onStatusChanged: fontManager.logFontStatus(ubuntuBold, "Ubuntu Bold")
-    }
-    property FontLoader ubuntuLight: FontLoader {
-        source: "../fonts/Ubuntu-Light.ttf"
-        onStatusChanged: fontManager.logFontStatus(ubuntuLight, "Ubuntu Light")
-    }
     property FontLoader firaSansRegular: FontLoader {
         source: "../fonts/FiraSans-Regular.ttf"
         onStatusChanged: fontManager.logFontStatus(firaSansRegular, "Fira Sans Regular")
@@ -126,38 +111,42 @@ QtObject {
 
     function selectFont(key) {
         fontManager.selectedKey = key
-        FontPreferenceStorage.saveFontChoice(key)
+        PreferenceStorage.saveFontChoice(key)
     }
 
     function selectFontSizeMultiplier(value) {
         fontManager.fontSizeMultiplier = value
-        FontPreferenceStorage.saveFontSizeMultiplier(value)
+        PreferenceStorage.saveFontSizeMultiplier(value)
     }
 
     function selectLineHeightMultiplier(value) {
         fontManager.lineHeightMultiplier = value
-        FontPreferenceStorage.saveLineHeightMultiplier(value)
+        PreferenceStorage.saveLineHeightMultiplier(value)
     }
 
     function selectLightWeight(enabled) {
         fontManager.lightWeight = enabled
-        FontPreferenceStorage.saveLightWeight(enabled)
+        PreferenceStorage.saveLightWeight(enabled)
     }
 
     Component.onCompleted: {
-        var saved = FontPreferenceStorage.loadFontChoice()
-        if (saved)
+        var saved = PreferenceStorage.loadFontChoice()
+        // "ubuntu" was a removed font choice - migrate to Inter rather
+        // than leaving selectedKey pointing at a key nothing recognizes.
+        if (saved === "ubuntu")
+            fontManager.selectedKey = keyInter
+        else if (saved)
             fontManager.selectedKey = saved
 
-        var savedMultiplier = FontPreferenceStorage.loadFontSizeMultiplier()
+        var savedMultiplier = PreferenceStorage.loadFontSizeMultiplier()
         if (savedMultiplier)
             fontManager.fontSizeMultiplier = savedMultiplier
 
-        var savedLineHeight = FontPreferenceStorage.loadLineHeightMultiplier()
+        var savedLineHeight = PreferenceStorage.loadLineHeightMultiplier()
         if (savedLineHeight)
             fontManager.lineHeightMultiplier = savedLineHeight
 
-        var savedLightWeight = FontPreferenceStorage.loadLightWeight()
+        var savedLightWeight = PreferenceStorage.loadLightWeight()
         if (savedLightWeight)
             fontManager.lightWeight = savedLightWeight === "1"
     }

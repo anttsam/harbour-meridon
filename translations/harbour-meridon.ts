@@ -24,10 +24,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Fonts: Fira Sans, Inter, Open Sans, Roboto, Ubuntu</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Licensed under the SIL Open Font License 1.1.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -41,6 +37,10 @@
     </message>
     <message>
         <source>A native Mastodon client for SailfishOS. Supports most of the Mastodon features such as lists as well as some basic Sailfish OS theming.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fonts: Fira Sans, Inter, Open Sans, Roboto</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -68,22 +68,6 @@
     </message>
     <message>
         <source>Couldn&apos;t upload attachment (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Public</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Quiet public</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Followers only</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Only people I mention</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -134,11 +118,27 @@
         <source>Add a comment</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Public</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quiet public</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Followers only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only people I mention</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
-    <name>EmojiPickerDialog</name>
+    <name>EmojiPickerPage</name>
     <message>
-        <source>Insert</source>
+        <source>Last used</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -146,19 +146,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Loading this server&apos;s emoji…</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Flags</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Last used</source>
+        <source>Emoji</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Search emoji</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading this server&apos;s emoji…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -878,10 +878,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ubuntu</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Fira Sans</source>
         <translation type="unfinished"></translation>
     </message>
@@ -999,6 +995,14 @@
     </message>
     <message>
         <source>Logging out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Autoplay GIFs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Plays GIF attachments automatically as they scroll into view, without needing a tap first.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

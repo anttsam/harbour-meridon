@@ -1,7 +1,7 @@
 .pragma library
 .import "LocalDb.js" as LocalDb
 
-// Persists the "Last used" row in EmojiPickerDialog.qml - an ordered list
+// Persists the "Last used" row in EmojiPickerPage.qml - an ordered list
 // (most recent first) of up to 24 entries, stored as one JSON blob rather
 // than a row-per-entry table, since the whole list is always read/written
 // together and reordering-in-place on every pick is simpler as an array

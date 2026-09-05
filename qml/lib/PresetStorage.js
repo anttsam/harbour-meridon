@@ -1,7 +1,7 @@
 .pragma library
 .import "LocalDb.js" as LocalDb
 
-// Separate database from FontPreferenceStorage.js's single key/value table -
+// Separate database from PreferenceStorage.js's single key/value table -
 // each preset is itself a named bundle of values, not a single scalar, so
 // it gets its own name-keyed table instead. Only ever holds rows for the
 // four fixed preset names (Native/More contrast/Mastodon/Custom) -

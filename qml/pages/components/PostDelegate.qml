@@ -495,6 +495,7 @@ ListItem {
                         truncationMode: TruncationMode.Fade
                         width: Math.min(contentWidth, parent.width -  2* parent.spacing - displayNameLabel.width - agoLabel.width)
                         anchors.verticalCenter: parent.verticalCenter
+                        useCustomFont: true
                     }
 
                     AppLabel {
@@ -505,7 +506,8 @@ ListItem {
                         truncationMode: TruncationMode.Fade
                         //width: parent.width //- parent.spacing - displayNameLabel.width
                         anchors.verticalCenter: parent.verticalCenter
-                        opacity: 0.6
+                        //opacity: 0.6
+                        useCustomFont: true
                     }
                 }
             }

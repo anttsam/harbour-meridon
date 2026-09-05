@@ -1,6 +1,6 @@
 pragma Singleton
 import QtQuick 2.0
-import "FontPreferenceStorage.js" as FontPreferenceStorage
+import "PreferenceStorage.js" as PreferenceStorage
 import "EmojiCodepoints.js" as EmojiCodepoints
 
 // Renders emoji as colorful inline images in post text and display names,
@@ -17,11 +17,11 @@ QtObject {
 
     function selectRenderEmojis(enabled) {
         emojiManager.renderEmojis = enabled
-        FontPreferenceStorage.saveRenderEmojis(enabled)
+        PreferenceStorage.saveRenderEmojis(enabled)
     }
 
-    // this height seems to  keep the rowheigh, no idea why
-    readonly property real _emojiSizeRatio: 1.23
+    // 1.23 sometimes 1 seems to keep the rowheigh, no idea why
+    readonly property real _emojiSizeRatio: 1 //1.23
 
     property var _unicodeMap: null
     property var _unicodeRegex: null
@@ -116,7 +116,7 @@ QtObject {
     }
 
     Component.onCompleted: {
-        var saved = FontPreferenceStorage.loadRenderEmojis()
+        var saved = PreferenceStorage.loadRenderEmojis()
         if (saved !== "")
             emojiManager.renderEmojis = saved === "1"
     }

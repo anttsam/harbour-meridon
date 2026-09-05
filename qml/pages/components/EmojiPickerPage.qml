@@ -7,8 +7,13 @@ import "../../lib/EmojiRecentStorage.js" as EmojiRecentStorage
 
 // Emoji picker
 
-Dialog {
-    id: emojiPickerDialog
+Page {
+    id: emojiPickerPage
+
+    // Emitted right as a cell is tapped (see acceptSelection() below), text
+    // already formatted the way ComposePage inserts it - no confirm step,
+    // a Dialog's accept/reject wouldn't buy anything here.
+    signal emojiInserted(string text)
 
     backgroundColor: AppLib.BackgroundManager.backgroundColor
     palette.highlightColor: AppLib.BackgroundManager.activeHighlightColor
@@ -16,9 +21,8 @@ Dialog {
 
     property string selectedShortcode: ""
     property string selectedChar: ""
-    canAccept: selectedShortcode.length > 0 || selectedChar.length > 0
 
-    // What ComposePage actually inserts once accepted
+    // What ComposePage actually inserts
     readonly property string insertText: (selectedShortcode.length > 0
         ? (":" + selectedShortcode + ":") : selectedChar) + " "
 
@@ -73,7 +77,7 @@ Dialog {
     property var categoryIndex: ({})
 
     function scrollToCategory(category) {
-        var idx = emojiPickerDialog.categoryIndex[category]
+        var idx = emojiPickerPage.categoryIndex[category]
         if (idx === undefined || idx < 0 || idx >= rowsModel.count)
             return
         pickerListView.positionViewAtIndex(idx, ListView.Beginning)
@@ -85,23 +89,26 @@ Dialog {
         : 5
 
     function matchesQuery(name, shortcode) {
-        if (emojiPickerDialog.searchQuery.length === 0)
+        if (emojiPickerPage.searchQuery.length === 0)
             return true
-        return (!!name && name.toLowerCase().indexOf(emojiPickerDialog.searchQuery) !== -1)
-            || (!!shortcode && shortcode.toLowerCase().indexOf(emojiPickerDialog.searchQuery) !== -1)
+        return (!!name && name.toLowerCase().indexOf(emojiPickerPage.searchQuery) !== -1)
+            || (!!shortcode && shortcode.toLowerCase().indexOf(emojiPickerPage.searchQuery) !== -1)
     }
 
-    onAccepted: {
-        var entry = emojiPickerDialog.selectedShortcode.length > 0
-            ? { kind: "custom", shortcode: emojiPickerDialog.selectedShortcode,
-                url: (emojiPickerDialog._selectedCustomUrl || "") }
-            : { kind: "unicode", char: emojiPickerDialog.selectedChar,
-                url: (emojiPickerDialog._selectedCharUrl || ""),
-                code: (emojiPickerDialog._selectedCharCode || "") }
+    function acceptSelection() {
+        var entry = emojiPickerPage.selectedShortcode.length > 0
+            ? { kind: "custom", shortcode: emojiPickerPage.selectedShortcode,
+                url: (emojiPickerPage._selectedCustomUrl || "") }
+            : { kind: "unicode", char: emojiPickerPage.selectedChar,
+                url: (emojiPickerPage._selectedCharUrl || ""),
+                code: (emojiPickerPage._selectedCharCode || "") }
         EmojiRecentStorage.recordUsed(entry)
+
+        emojiPickerPage.emojiInserted(emojiPickerPage.insertText)
+        pageStack.pop()
     }
 
-    // Set alongside selectedShortcode/selectedChar so onAccepted gets it straight away
+    // Set alongside selectedShortcode/selectedChar so acceptSelection() gets it straight away
     property string _selectedCustomUrl: ""
     property string _selectedCharUrl: ""
     property string _selectedCharCode: ""
@@ -135,19 +142,19 @@ Dialog {
     }
 
     function selectShortcode(shortcode, url) {
-        emojiPickerDialog.selectedChar = ""
-        emojiPickerDialog._selectedCharUrl = ""
-        emojiPickerDialog._selectedCharCode = ""
-        emojiPickerDialog.selectedShortcode = shortcode
-        emojiPickerDialog._selectedCustomUrl = url
+        emojiPickerPage.selectedChar = ""
+        emojiPickerPage._selectedCharUrl = ""
+        emojiPickerPage._selectedCharCode = ""
+        emojiPickerPage.selectedShortcode = shortcode
+        emojiPickerPage._selectedCustomUrl = url
     }
 
     function selectChar(ch, url, code) {
-        emojiPickerDialog.selectedShortcode = ""
-        emojiPickerDialog._selectedCustomUrl = ""
-        emojiPickerDialog.selectedChar = ch
-        emojiPickerDialog._selectedCharUrl = url
-        emojiPickerDialog._selectedCharCode = code || ""
+        emojiPickerPage.selectedShortcode = ""
+        emojiPickerPage._selectedCustomUrl = ""
+        emojiPickerPage.selectedChar = ch
+        emojiPickerPage._selectedCharUrl = url
+        emojiPickerPage._selectedCharCode = code || ""
     }
 
     function normalizeCustomCell(e) {
@@ -169,13 +176,13 @@ Dialog {
     }
 
     function appendChunkedRows(category, items, normalizeFn) {
-        var cols = emojiPickerDialog.gridColumns
+        var cols = emojiPickerPage.gridColumns
         for (var i = 0; i < items.length; i += cols) {
             var cells = []
             for (var j = i; j < Math.min(i + cols, items.length); j++)
                 cells.push(normalizeFn(items[j]))
-            if (!(category in emojiPickerDialog.categoryIndex))
-                emojiPickerDialog.categoryIndex[category] = rowsModel.count
+            if (!(category in emojiPickerPage.categoryIndex))
+                emojiPickerPage.categoryIndex[category] = rowsModel.count
             rowsModel.append({ category: category, cellsJson: JSON.stringify(cells) })
         }
     }
@@ -185,28 +192,28 @@ Dialog {
         rowsModel.clear()
         categoryIndex = {}
 
-        var recent = emojiPickerDialog.recentEmojis.filter(function(e) {
+        var recent = emojiPickerPage.recentEmojis.filter(function(e) {
             return e.kind === "custom"
-                ? emojiPickerDialog.matchesQuery("", e.shortcode)
-                : emojiPickerDialog.matchesQuery(EmojiCodepoints.nameForCode(e.code || ""), "")
+                ? emojiPickerPage.matchesQuery("", e.shortcode)
+                : emojiPickerPage.matchesQuery(EmojiCodepoints.nameForCode(e.code || ""), "")
         })
         appendChunkedRows(qsTr("Last used"), recent, normalizeRecentCell)
 
-        var custom = emojiPickerDialog.customEmojis.filter(function(e) {
-            return emojiPickerDialog.matchesQuery("", e.shortcode)
+        var custom = emojiPickerPage.customEmojis.filter(function(e) {
+            return emojiPickerPage.matchesQuery("", e.shortcode)
         })
         appendChunkedRows(qsTr("Custom"), custom, normalizeCustomCell)
 
         var groups = EmojiCodepoints.groupedCodepoints()
         for (var g = 0; g < groups.length; g++) {
             var filteredCodes = groups[g].codes.filter(function(hex) {
-                return emojiPickerDialog.matchesQuery(EmojiCodepoints.emojiName(hex), "")
+                return emojiPickerPage.matchesQuery(EmojiCodepoints.emojiName(hex), "")
             })
             appendChunkedRows(groups[g].group, filteredCodes, normalizeUnicodeCell)
         }
 
         var flags = EmojiCodepoints.flagPairs().filter(function(pair) {
-            return emojiPickerDialog.matchesQuery(EmojiCodepoints.flagName(pair[0], pair[1]), "")
+            return emojiPickerPage.matchesQuery(EmojiCodepoints.flagName(pair[0], pair[1]), "")
         })
         appendChunkedRows(qsTr("Flags"), flags, normalizeFlagCell)
 
@@ -236,15 +243,15 @@ Dialog {
         width: parent.width
         spacing: Theme.paddingMedium
 
-        DialogHeader {
-            acceptText: qsTr("Insert")
+        PageHeader {
+            title: qsTr("Emoji")
         }
 
         SearchField {
             x: Theme.horizontalPageMargin
             width: parent.width - 2 * Theme.horizontalPageMargin
             placeholderText: qsTr("Search emoji")
-            onTextChanged: emojiPickerDialog.searchQuery = text.trim().toLowerCase()
+            onTextChanged: emojiPickerPage.searchQuery = text.trim().toLowerCase()
         }
 
         Flow {
@@ -253,14 +260,14 @@ Dialog {
             width: parent.width - 2 * Theme.horizontalPageMargin
             spacing: Theme.paddingSmall
 
-            visible: emojiPickerDialog.searchQuery.length === 0
+            visible: emojiPickerPage.searchQuery.length === 0
 
             Repeater {
-                model: emojiPickerDialog.jumpTargets
+                model: emojiPickerPage.jumpTargets
 
                 Item {
-                    width: emojiPickerDialog.jumpCellSize
-                    height: emojiPickerDialog.jumpCellSize
+                    width: emojiPickerPage.jumpCellSize
+                    height: emojiPickerPage.jumpCellSize
                     PanelBackground {
                         anchors.fill: parent
                         opacity: 0.5
@@ -277,7 +284,7 @@ Dialog {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: emojiPickerDialog.scrollToCategory(modelData.category)
+                        onClicked: emojiPickerPage.scrollToCategory(modelData.category)
                     }
 
                 }
@@ -291,7 +298,7 @@ Dialog {
             wrapMode: Text.Wrap
             color: Theme.secondaryColor
             font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier
-            visible: emojiPickerDialog.customLoading
+            visible: emojiPickerPage.customLoading
             text: qsTr("Loading this server's emoji…")
         }
     }
@@ -315,7 +322,7 @@ Dialog {
             id: rowDelegate
             x: Theme.horizontalPageMargin
             width: pickerListView.width - 2 * Theme.horizontalPageMargin
-            height: emojiPickerDialog.cellSize
+            height: emojiPickerPage.cellSize
 
             readonly property var rowCells: JSON.parse(cellsJson)
 
@@ -325,14 +332,14 @@ Dialog {
 
                 Item {
                     id: cellItem
-                    width: emojiPickerDialog.cellSize
-                    height: emojiPickerDialog.cellSize
+                    width: emojiPickerPage.cellSize
+                    height: emojiPickerPage.cellSize
 
                     readonly property var cell: rowDelegate.rowCells[index]
                     readonly property bool isCustom: cell.cellKind === "custom"
                     readonly property bool isSelected: isCustom
-                        ? emojiPickerDialog.selectedShortcode === cell.shortcode
-                        : emojiPickerDialog.selectedChar === cell.ch
+                        ? emojiPickerPage.selectedShortcode === cell.shortcode
+                        : emojiPickerPage.selectedChar === cell.ch
 
                     Loader {
                         anchors.fill: parent
@@ -354,9 +361,13 @@ Dialog {
                         anchors.fill: parent
                         onClicked: {
                             if (cellItem.isCustom)
-                                emojiPickerDialog.selectShortcode(cellItem.cell.shortcode, cellItem.cell.url)
+                                emojiPickerPage.selectShortcode(cellItem.cell.shortcode, cellItem.cell.url)
                             else
-                                emojiPickerDialog.selectChar(cellItem.cell.ch, cellItem.cell.url, cellItem.cell.code)
+                                emojiPickerPage.selectChar(cellItem.cell.ch, cellItem.cell.url, cellItem.cell.code)
+
+                            // Tapping an emoji is the whole interaction - no
+                            // separate "Insert" confirmation step needed.
+                            emojiPickerPage.acceptSelection()
                         }
                     }
                 }

@@ -200,7 +200,7 @@ Item {
                 id: searchField
                 width: parent.width
                 placeholderText: qsTr("Search")
-                EnterKey.iconSource: "image://theme/icon-m-enter-search"
+                EnterKey.iconSource: "image://theme/icon-m-search"
                 EnterKey.onClicked: {
                     header.searchCommitting = true
                     searchContextMenu.close(header)

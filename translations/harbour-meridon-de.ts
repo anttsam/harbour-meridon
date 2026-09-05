@@ -24,10 +24,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Fonts: Fira Sans, Inter, Open Sans, Roboto, Ubuntu</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Licensed under the SIL Open Font License 1.1.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -41,6 +37,10 @@
     </message>
     <message>
         <source>A native Mastodon client for SailfishOS. Supports most of the Mastodon features such as lists as well as some basic Sailfish OS theming.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fonts: Fira Sans, Inter, Open Sans, Roboto</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -136,9 +136,9 @@
     </message>
 </context>
 <context>
-    <name>EmojiPickerDialog</name>
+    <name>EmojiPickerPage</name>
     <message>
-        <source>Insert</source>
+        <source>Last used</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -146,19 +146,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Loading this server&apos;s emoji…</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Flags</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Last used</source>
+        <source>Emoji</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Search emoji</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading this server&apos;s emoji…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -772,10 +772,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Posts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Couldn&apos;t load profile</source>
         <translation type="unfinished"></translation>
     </message>
@@ -785,10 +781,6 @@
     </message>
     <message>
         <source>Couldn&apos;t load profile (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Likes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -817,6 +809,14 @@
     </message>
     <message>
         <source>Couldn&apos;t load</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Favourites</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -875,10 +875,6 @@
     </message>
     <message>
         <source>Default</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ubuntu</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -999,6 +995,14 @@
     </message>
     <message>
         <source>Logging out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Autoplay GIFs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Plays GIF attachments automatically as they scroll into view, without needing a tap first.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
