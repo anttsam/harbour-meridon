@@ -191,6 +191,12 @@
         <source>Pull down to refresh or add content</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <source>%n new post(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>FirstPage</name>

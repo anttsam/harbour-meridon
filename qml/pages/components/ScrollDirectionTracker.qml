@@ -13,6 +13,14 @@ Item {
 
     property real _lastToggleY: 0
 
+    // The target's contentY was moved by code, not by the user (e.g. keeping
+    // a position across an insert above it) - take that as the new baseline
+    // so the next real drag is measured from here instead of looking like a
+    // long scroll, without touching whether the bars are currently hidden.
+    function rebase() {
+        _lastToggleY = target ? target.contentY : 0
+    }
+
     // SilicaListView.scrollToTop(), donsnt "drag", so recover and show
     function reset() {
         hidden = false

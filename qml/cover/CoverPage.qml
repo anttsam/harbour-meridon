@@ -38,6 +38,9 @@ CoverBackground {
     id: cover
 
     property bool refreshing: false
+    // Posts added by refreshes started from this cover since the app was
+    // last in the foreground - seeing the app clears it.
+    property int newPostCount: 0
     property var homeContent: FeedsManager.peekFeedContent("home")
     readonly property var homeModel: homeContent ? homeContent.model : null
     readonly property int previewCount: homeModel ? Math.min(homeModel.count, 3) : 0
@@ -115,6 +118,22 @@ CoverBackground {
             text: "Meridon"
             color: Theme.secondaryColor
 
+        }
+        Label {
+            visible: cover.newPostCount > 0
+            anchors.baseline: appName.baseline
+            text: "+" + (cover.newPostCount > 99 ? "99+" : cover.newPostCount)
+            color: palette.highlightColor
+            font.pixelSize: Theme.fontSizeSmall
+            font.bold: true
+        }
+    }
+
+    Connections {
+        target: Qt.application
+        onActiveChanged: {
+            if (Qt.application.active)
+                cover.newPostCount = 0
         }
     }
 
@@ -230,8 +249,10 @@ CoverBackground {
             onTriggered: {
                 if (FeedsManager.peekFeedContent("home") && !cover.refreshing) {
                     cover.refreshing = true
-                    FeedsManager.loadFeedContent(FeedsManager.defaultHomeFeed(), true, null, function() {
+                    FeedsManager.refreshFeedContent(FeedsManager.defaultHomeFeed(), null, function(success, error401, message, status, newCount) {
                         cover.refreshing = false
+                        if (success && newCount > 0)
+                            cover.newPostCount += newCount
                     })
                 }
             }

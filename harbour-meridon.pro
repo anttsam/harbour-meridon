@@ -91,6 +91,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/lib/PresetManager.qml \
     qml/lib/PresetStorage.js \
     qml/lib/SessionManager.js \
+    qml/lib/TimeManager.qml \
     qml/lib/TokenStorage.js \
     qml/lib/UrlRouter.js \
     qml/lib/VideoExpansionTracker.js \

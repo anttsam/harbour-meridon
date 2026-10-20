@@ -240,7 +240,14 @@ function getFeedContent(feedId, anchor) {
             busy: false,
             nextCursor: "",
             lastLoadMoreCursor: "",
-            loadedOnce: false
+            loadedOnce: false,
+            // Registered by whichever FeedPane is showing this feed, so
+            // refreshFeedContent() can keep that pane's scroll position
+            // across an insert at the top no matter who triggered the
+            // refresh (the pane's own menu, or the cover). keeperOwner
+            // lets the pane unregister only itself on destruction.
+            positionKeeper: null,
+            keeperOwner: null
         }
     }
     return feedContent[feedId]
@@ -320,19 +327,7 @@ function loadFeedContent(feed, reset, anchor, onDone) {
         content.lastLoadMoreCursor = ""
     }
 
-    var path
-    if (feed.type === "local") {
-        path = "/api/v1/timelines/public?local=true&limit=20"
-    } else if (feed.type === "federated") {
-        path = "/api/v1/timelines/public?limit=20"
-    } else if (feed.type === "list") {
-        path = "/api/v1/timelines/list/" + encodeURIComponent(feed.value) + "?limit=20"
-    } else if (feed.type === "hashtag") {
-        path = "/api/v1/timelines/tag/" + encodeURIComponent(feed.value) + "?limit=20"
-    } else {
-        // "home" - the default/main timeline
-        path = "/api/v1/timelines/home?limit=20"
-    }
+    var path = _feedPath(feed, 20)
     if (!reset && content.nextCursor.length > 0)
         path += "&max_id=" + encodeURIComponent(content.nextCursor)
 
@@ -369,6 +364,198 @@ function loadFeedContent(feed, reset, anchor, onDone) {
             }
         }
     )
+}
+
+// Timeline endpoint for a feed with the page size already applied, so
+// callers just append further &params. Shared by loadFeedContent() and
+// refreshFeedContent() so the two can't drift apart.
+function _feedPath(feed, limit) {
+    if (feed.type === "local")
+        return "/api/v1/timelines/public?local=true&limit=" + limit
+    if (feed.type === "federated")
+        return "/api/v1/timelines/public?limit=" + limit
+    if (feed.type === "list")
+        return "/api/v1/timelines/list/" + encodeURIComponent(feed.value) + "?limit=" + limit
+    if (feed.type === "hashtag")
+        return "/api/v1/timelines/tag/" + encodeURIComponent(feed.value) + "?limit=" + limit
+    // "home" - the default/main timeline
+    return "/api/v1/timelines/home?limit=" + limit
+}
+
+var REFRESH_PAGE_SIZE = 40
+var REFRESH_MAX_PAGES = 3
+
+// Pull-to-refresh that keeps what's already loaded: fetches the newest
+// page(s), then matches them against the model by timelineId. Posts not in
+// the model yet are inserted at the top (so scrolling up reveals everything
+// missed in between), posts already in it are updated in place (like/boost/
+// reply counts, edits, poll results, "ago" text) - nothing is cleared, and
+// nextCursor/lastLoadMoreCursor stay put since they belong to the old end of
+// the list. If the newest pages never reach a post already in the model
+// (more than ~REFRESH_PAGE_SIZE * REFRESH_MAX_PAGES posts missed), there's
+// an unfillable gap, so it falls back to replacing the contents entirely,
+// same as a full reload. Nothing touches the model until every page has
+// arrived, so a failure part-way leaves it exactly as it was. Falls back to
+// a plain full load when nothing has been loaded yet. onDone has the same
+// shape as loadFeedContent()'s, plus a fifth argument: how many posts were
+// added (0 when nothing new, or when it fell back to a plain full load).
+// If the feed's bucket has a positionKeeper(count, insert) registered, that
+// is called instead of inserting directly, so the pane that owns the actual
+// ListView can keep its scroll position across the insert by calling
+// insert() itself at the right moment - without it a view sitting at the
+// top just shows the new posts, pushing what you were reading down. The
+// posts always end up inserted exactly once even if the keeper throws (e.g.
+// its pane was destroyed while the request was in flight).
+function refreshFeedContent(feed, anchor, onDone) {
+    var content = getFeedContent(feed.id, anchor)
+
+    // Something else is already fetching this feed - that fetch will land
+    // in the same model, so there's nothing for this one to add. Still
+    // report done so the caller's own busy flag can't get stuck.
+    if (content.busy) {
+        onDone(true, false, "", 0, 0)
+        return
+    }
+
+    if (!content.loadedOnce || content.model.count === 0) {
+        loadFeedContent(feed, true, anchor, onDone)
+        return
+    }
+
+    content.busy = true
+
+    function indexByTimelineId() {
+        var map = {}
+        for (var i = 0; i < content.model.count; i++) {
+            var tid = content.model.get(i).timelineId
+            if (tid)
+                map[tid] = i
+        }
+        return map
+    }
+
+    var known = indexByTimelineId()
+    var collected = []  // every row fetched, newest first - for the replace fallback
+    var newRows = []    // rows newer than anything already in the model
+    var knownRows = []  // fetched rows that are already in the model
+    var overlap = false
+    var pages = 0
+
+    function finish(lastCursor) {
+        if (collected.length === 0) {
+            content.busy = false
+            onDone(true, false, "", 0, 0)
+            return
+        }
+
+        if (overlap) {
+            // Indices are looked up again here rather than reused from the
+            // start of the request, in case the model changed meanwhile.
+            var current = indexByTimelineId()
+            var boundary = 0  // model index of the oldest post this fetch reached
+            for (var k = 0; k < knownRows.length; k++) {
+                var row = knownRows[k]
+                var idx = current[row.timelineId]
+                if (idx === undefined)
+                    continue
+                boundary = Math.max(boundary, idx)
+                var existing = content.model.get(idx)
+                for (var key in row) {
+                    if (existing[key] !== row[key])
+                        content.model.setProperty(idx, key, row[key])
+                }
+            }
+
+            // Drop posts that have left the timeline since they were loaded
+            // (deleted - including from another list or the profile - or
+            // newly muted/filtered): anything newer than the oldest post we
+            // reached that the fetch didn't return. What's older than that
+            // wasn't covered by this fetch, so it's left alone.
+            var fetched = {}
+            for (var f = 0; f < collected.length; f++)
+                fetched[collected[f].timelineId] = true
+            var removed = 0
+            for (var m = boundary - 1; m >= 0; m--) {
+                var mid = content.model.get(m).timelineId
+                if (mid && !fetched[mid]) {
+                    content.model.remove(m)
+                    removed++
+                }
+            }
+            var inserted = false
+            var insertNew = function() {
+                if (inserted)
+                    return
+                inserted = true
+                for (var n = 0; n < newRows.length; n++)
+                    content.model.insert(n, newRows[n])
+            }
+            if (content.positionKeeper && newRows.length > 0) {
+                try {
+                    content.positionKeeper(newRows.length, insertNew)
+                } catch (e) {
+                    console.warn("[FeedsManager] positionKeeper failed:", e)
+                }
+            }
+            insertNew()
+            console.log("[FeedsManager] refreshed", feed.displayName, "-",
+                newRows.length, "new,", knownRows.length, "updated,", removed, "removed")
+        } else {
+            content.model.clear()
+            for (var c = 0; c < collected.length; c++)
+                content.model.append(collected[c])
+            content.nextCursor = lastCursor
+            content.lastLoadMoreCursor = ""
+            console.log("[FeedsManager] refreshed", feed.displayName,
+                "- gap too large, replaced", collected.length, "posts")
+        }
+
+        content.busy = false
+        onDone(true, false, "", 0, newRows.length)
+    }
+
+    function fetchPage(maxId) {
+        var path = _feedPath(feed, REFRESH_PAGE_SIZE)
+        if (maxId)
+            path += "&max_id=" + encodeURIComponent(maxId)
+
+        SessionManager.authenticatedRequest("GET", path, null,
+            function(response, linkHeader) {
+                var statuses = response || []
+                var cursor = PostMapper.parseNextCursor(linkHeader)
+
+                mapStatusesAsync(statuses, function(rows) {
+                    pages++
+                    for (var r = 0; r < rows.length; r++) {
+                        collected.push(rows[r])
+                        if (known[rows[r].timelineId] !== undefined) {
+                            overlap = true
+                            knownRows.push(rows[r])
+                        } else if (!overlap) {
+                            newRows.push(rows[r])
+                        }
+                    }
+
+                    if (!overlap && cursor.length > 0 && pages < REFRESH_MAX_PAGES)
+                        fetchPage(cursor)
+                    else
+                        finish(cursor)
+                })
+            },
+            function(status, message) {
+                content.busy = false
+                if (status === 401) {
+                    console.warn("[FeedsManager] session invalid, forcing re-login")
+                    onDone(false, true, "", status)
+                } else {
+                    onDone(false, false, message, status)
+                }
+            }
+        )
+    }
+
+    console.log("[FeedsManager] refreshing (merge) feed:", feed.displayName)
+    fetchPage("")
 }
 
 // Builds the carousel's feed set from three sources: the locally-pinned

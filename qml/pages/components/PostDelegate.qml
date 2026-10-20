@@ -500,7 +500,8 @@ ListItem {
 
                     AppLabel {
                         id: agoLabel
-                        text: model.timeAgo
+                        // TimeManager.tick is read only so this re-evaluates when it is bumped
+                        text: { AppLib.TimeManager.tick; return model.createdAt ? PostMapper.formatTimeAgo(model.createdAt) : model.timeAgo }
                         color: Theme.secondaryColor
                         font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier
                         truncationMode: TruncationMode.Fade
@@ -653,7 +654,8 @@ ListItem {
                         }
                         AppLabel {
                             id: mainAgoLabel
-                            text: model.timeAgo
+                            // TimeManager.tick is read only so this re-evaluates when it is bumped
+                            text: { AppLib.TimeManager.tick; return model.createdAt ? PostMapper.formatTimeAgo(model.createdAt) : model.timeAgo }
                             color: Theme.secondaryColor
                             font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
                             truncationMode: TruncationMode.Fade

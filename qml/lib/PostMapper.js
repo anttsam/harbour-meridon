@@ -274,6 +274,9 @@ function mapStatus(status, timeAgoFn) {
 
     return {
         uri: inner.id,
+        // The timeline entry's own id (differs from uri for boosts) - what
+        // pagination cursors and refresh-merging identify a row by.
+        timelineId: status.id,
         authorId: inner.account.id,
         displayName: inner.account.display_name || "",
         handle: inner.account.acct,
@@ -301,6 +304,7 @@ function mapStatus(status, timeAgoFn) {
         reblogged: !!inner.reblogged,
         bookmarked: !!inner.bookmarked,
         timeAgo: timeAgoFn(inner.created_at),
+        createdAt: inner.created_at || "",
         embedImagesJson: JSON.stringify(images),
         externalJson: external ? JSON.stringify(external) : "",
         mentionsJson: JSON.stringify(mentionsByHref),
