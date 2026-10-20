@@ -1,3 +1,12 @@
+* Tue Oct 20 2026 anttsam <sami@anttila.ch> 1.4-1
+- Refresh keeps your place in the feed and adds new posts above
+- Refresh updates counts and "ago" times, and drops deleted posts
+- Show a notice and a cover badge when a refresh finds new posts
+- Own profile posts refresh when opening the Profile tab and after posting
+- Add a setting to autoplay GIFs
+- Reworked emoji picker
+- Fix long compose text overlapping the bottom toolbar
+
 * Fri Sep 04 2026 anttsam <sami@anttila.ch> 1.3.1-1
 - Fix photo/video/audio pickers failing to open
 - Fix search results claiming there's more to load when there isn't
