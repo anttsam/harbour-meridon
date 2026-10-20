@@ -22,7 +22,7 @@ Item {
     signal moreRequested()
 
     width: parent ? parent.width : 0
-    height: Theme.itemSizeExtraSmall * 0.6 //statsRow.height
+    height: Theme.itemSizeExtraSmall * 0.8 //statsRow.height
     opacity: 0.5
 
     Row {
@@ -40,7 +40,7 @@ Item {
                 id: replyRow
                 //anchors.centerIn: parent
                 spacing: Theme.paddingSmall
-                Image { source: "image://theme/icon-s-chat"; width: Theme.iconSizeSmall; height: width; anchors.verticalCenter: parent.verticalCenter }
+                Image { source: "image://theme/icon-s-chat"; width: Theme.iconSizeSmall*1.2; height: width; anchors.verticalCenter: parent.verticalCenter }
                 AppLabel { text: PostMapper.formatCount(statsRowWrapper.replyCount); font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier; color: Theme.secondaryColor; anchors.verticalCenter: parent.verticalCenter }
             }
 
@@ -66,7 +66,7 @@ Item {
                 Image {
                     source: "image://theme/icon-s-retweet?"
                         + (statsRowWrapper.reblogged ? AppLib.BackgroundManager.activeHighlightColor : Theme.secondaryColor)
-                    width: Theme.iconSizeSmall
+                    width: Theme.iconSizeSmall*1.2
                     height: width
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -98,7 +98,7 @@ Item {
                 Image {
                     source: "image://theme/icon-s-like?"
                         + (statsRowWrapper.favourited ? AppLib.BackgroundManager.activeHighlightColor : Theme.secondaryColor)
-                    width: Theme.iconSizeSmall
+                    width: Theme.iconSizeSmall*1.2
                     height: width
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -134,7 +134,7 @@ Item {
                 Image {
                     source: "image://theme/icon-m-incognito-" + (statsRowWrapper.bookmarked ? "selected" : "new") + "?"
                         + (statsRowWrapper.bookmarked ? AppLib.BackgroundManager.activeHighlightColor : Theme.secondaryColor)
-                    width: likeContainer.height //Theme.iconSizeMedium
+                    width: likeContainer.height*1.2 //Theme.iconSizeMedium
                     height: width
                     rotation: 180
                     anchors.verticalCenter: parent.verticalCenter

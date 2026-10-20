@@ -33,7 +33,9 @@ ListItem {
         : compactLayout.y + compactLayout.height) + Theme.paddingMedium
 
     // no press-highlight when not clickable
-    highlighted: clickable && down
+    //highlighted: clickable && down
+    _showPress:false
+
 
     onClicked: {
         if (clickable) {
