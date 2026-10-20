@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import "../../lib/SessionManager.js" as SessionManager
+import "../../lib/PostEvents.js" as PostEvents
 import "../../lib/PostMapper.js" as PostMapper
 import "../../lib/FeedsManager.js" as FeedsManager
 import "../../lib/VideoExpansionTracker.js" as VideoExpansionTracker
@@ -45,6 +46,7 @@ Item {
                 nextCursor: "",
                 lastLoadMoreCursor: "",
                 loadedOnce: false,
+                loadedAt: 0,
                 errorText: ""
             }
         }
@@ -90,6 +92,7 @@ Item {
                 FeedsManager.mapStatusesAsync(statuses, function(rows) {
                     content.busy = false
                     content.loadedOnce = true
+                    content.loadedAt = Date.now()
 
                     if (reset)
                         content.model.clear()
@@ -114,6 +117,40 @@ Item {
             }
         )
     }
+
+    // The Posts tab's pane while one exists - the carousel's delegates come
+    // and go, and an Item property goes null by itself when its object is
+    // destroyed. Lets refreshPosts() go through the pane's own load() so its
+    // busy indicators run, rather than fetching behind its back.
+    property Item _postsPane: null
+
+    // Simple replace refresh of the Posts tab (unlike the merge FeedPane does
+    // for feeds), plus the header so the post count follows. force is for
+    // right after posting or editing; otherwise (just switched to this tab) it
+    // is skipped while the posts are still loading or were loaded moments
+    // ago, so flipping between tabs doesn't keep replacing the list and
+    // sending it back to the top. Does nothing before the first load has
+    // finished - the startup/first-load path owns that.
+    function refreshPosts(force) {
+        var content = getSectionContent("posts", profileView)
+        if (!profileReady || !content.loadedOnce)
+            return
+        if (!force && (content.busy || Date.now() - content.loadedAt < 30000))
+            return
+
+        loadProfile()
+        if (_postsPane)
+            _postsPane.load(true)
+        else
+            loadSection("posts", true)
+    }
+
+    property var _postedListener: null
+    Component.onCompleted: {
+        _postedListener = function() { profileView.refreshPosts(true) }
+        PostEvents.subscribe(_postedListener)
+    }
+    Component.onDestruction: PostEvents.unsubscribe(_postedListener)
 
     property bool tabBarHidden: false
     property bool stripHidden: false
@@ -295,7 +332,11 @@ Item {
                             load(true)
                     }
                     onIsCurrentChanged: checkLoad()
-                    Component.onCompleted: checkLoad()
+                    Component.onCompleted: {
+                        checkLoad()
+                        if (sectionKey === "posts")
+                            profileView._postsPane = sectionPane
+                    }
 
                     function load(reset) {
                         if (busy && !reset)

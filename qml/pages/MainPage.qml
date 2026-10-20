@@ -37,6 +37,13 @@ AppPage {
             tabBar.hide()
     }
 
+    // Going to your own profile refreshes its posts (throttled, see
+    // ProfileView.refreshPosts())
+    onCurrentTabChanged: {
+        if (currentTab === 3)
+            profileViewInstance.refreshPosts(false)
+    }
+
     Component.onCompleted: {
         if (!SessionManager.isLoggedIn())
             redirectToLoginTimer.start()

@@ -87,6 +87,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/lib/LinkHandler.js \
     qml/lib/LocalDb.js \
     qml/lib/PinnedFeedsStorage.js \
+    qml/lib/PostEvents.js \
     qml/lib/PostMapper.js \
     qml/lib/PresetManager.qml \
     qml/lib/PresetStorage.js \

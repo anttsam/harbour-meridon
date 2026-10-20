@@ -6,6 +6,7 @@ import harbour.meridon.Native 1.0
 import "components"
 import "../lib" as AppLib
 import "../lib/SessionManager.js" as SessionManager
+import "../lib/PostEvents.js" as PostEvents
 
 FullscreenContentPage {
     id: composePage
@@ -788,6 +789,7 @@ FullscreenContentPage {
         SessionManager.authenticatedRequest(method, path, body,
             function(response) {
                 posting = false
+                PostEvents.posted()
                 pageStack.pop()
             },
             function(status, message) {
