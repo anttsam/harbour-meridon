@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1">
+<TS version="2.1" language="de">
 <context>
     <name>AboutPage</name>
     <message>
@@ -192,9 +192,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <source>%n new post(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <source>%n new post</source>
+        <translation>
+            <numerusform>%n neuer Beitrag</numerusform>
+            <numerusform>%n neue Beiträge</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n new posts</source>
+        <translation>
+            <numerusform>%n neuer Beitrag</numerusform>
+            <numerusform>%n neue Beiträge</numerusform>
         </translation>
     </message>
 </context>

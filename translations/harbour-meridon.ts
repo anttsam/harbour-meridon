@@ -192,7 +192,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <source>%n new post(s)</source>
+        <source>%n new post</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n new posts</source>
         <translation type="unfinished">
             <numerusform></numerusform>
         </translation>

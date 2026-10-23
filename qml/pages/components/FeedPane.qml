@@ -160,8 +160,10 @@ Item {
                 // The list keeps showing what you were reading, so say
                 // something new is waiting above it. Offset to sit under the
                 // tab strip rather than over the feed names.
-                if (newCount > 0)
-                    Notices.show(qsTr("%n new post(s)", "", newCount), Notice.Short, Notice.Top, 0, Theme.itemSizeSmall)
+                if (newCount === 1)
+                    Notices.show(qsTr("%n new post", "", newCount), Notice.Short, Notice.Top, 0, Theme.itemSizeSmall)
+                else if (newCount > 1)
+                    Notices.show(qsTr("%n new posts", "", newCount), Notice.Short, Notice.Top, 0, Theme.itemSizeSmall)
             }
         })
     }
