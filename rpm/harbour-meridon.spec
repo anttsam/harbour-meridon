@@ -21,7 +21,7 @@ BuildRequires:  pkgconfig(Qt5DBus)
 
 
 %description
-Unofficial Mastodon client for Sailfish OS, with support for lists, polls, notifications and search.
+Modern Mastodon client with easy access to lists
 
 
 %prep
