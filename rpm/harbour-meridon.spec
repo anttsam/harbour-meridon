@@ -7,7 +7,6 @@ License:    GPLv3
 URL:        https://github.com/anttsam/harbour-meridon
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   sailfishsilica-qt5 >= 0.10.9
-Requires:   qt5-qtimageformats-plugin-webp
 # TODO: verify and pin the exact package names providing the
 # Amber.Web.Authorization (OAuth2) and Sailfish.WebView QML plugins used
 # by OAuthLoginPage.qml/WebViewPage.qml - couldn't be resolved from this
@@ -22,7 +21,7 @@ BuildRequires:  pkgconfig(Qt5DBus)
 
 
 %description
-Unofficial Mastodon client
+Unofficial Mastodon client for Sailfish OS, with support for lists, polls, notifications and search.
 
 
 %prep
