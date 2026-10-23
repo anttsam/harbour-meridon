@@ -134,6 +134,58 @@
         <source>Add a comment</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>5 minutes</source>
+        <translation>5 Minuten</translation>
+    </message>
+    <message>
+        <source>30 minutes</source>
+        <translation>30 Minuten</translation>
+    </message>
+    <message>
+        <source>1 hour</source>
+        <translation>1 Stunde</translation>
+    </message>
+    <message>
+        <source>6 hours</source>
+        <translation>6 Stunden</translation>
+    </message>
+    <message>
+        <source>1 day</source>
+        <translation>1 Tag</translation>
+    </message>
+    <message>
+        <source>3 days</source>
+        <translation>3 Tage</translation>
+    </message>
+    <message>
+        <source>7 days</source>
+        <translation>7 Tage</translation>
+    </message>
+    <message>
+        <source>Posts with a poll can&apos;t be edited</source>
+        <translation>Beiträge mit Umfrage können nicht bearbeitet werden</translation>
+    </message>
+    <message>
+        <source>Choice %1</source>
+        <translation>Auswahl %1</translation>
+    </message>
+    <message>
+        <source>Add choice</source>
+        <translation>Auswahl hinzufügen</translation>
+    </message>
+    <message>
+        <source>Choices must be different</source>
+        <translation>Die Auswahlmöglichkeiten müssen verschieden sein</translation>
+    </message>
+    <message>
+        <source>Duration</source>
+        <translation>Dauer</translation>
+    </message>
+    <message>
+        <source>Allow multiple choices</source>
+        <translation>Mehrfachauswahl erlauben</translation>
+    </message>
 </context>
 <context>
     <name>EmojiPickerPage</name>
@@ -676,6 +728,10 @@
     <message>
         <source>Quote</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Posts with a poll can&apos;t be edited</source>
+        <translation>Beiträge mit Umfrage können nicht bearbeitet werden</translation>
     </message>
 </context>
 <context>

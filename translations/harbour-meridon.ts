@@ -134,6 +134,58 @@
         <source>Only people I mention</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>5 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>30 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>1 hour</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>6 hours</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>1 day</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>3 days</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>7 days</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Posts with a poll can&apos;t be edited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choice %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add choice</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choices must be different</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Duration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Allow multiple choices</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EmojiPickerPage</name>
@@ -673,6 +725,10 @@
     </message>
     <message>
         <source>Quote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Posts with a poll can&apos;t be edited</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

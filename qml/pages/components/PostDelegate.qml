@@ -65,9 +65,15 @@ ListItem {
             MenuItem {
                 visible: postDelegate.isOwnPost
                 text: qsTr("Edit")
-                onClicked: pageStack.push(Qt.resolvedUrl("../ComposePage.qml"), {
-                    editingUri: model.uri
-                })
+                onClicked: {
+                    // Mastodon can't change a poll without resetting its votes
+                    if (model.pollJson && model.pollJson.length > 0)
+                        Notices.show(qsTr("Posts with a poll can't be edited"), Notice.Short, Notice.Center)
+                    else
+                        pageStack.push(Qt.resolvedUrl("../ComposePage.qml"), {
+                            editingUri: model.uri
+                        })
+                }
             }
 
             MenuItem {
