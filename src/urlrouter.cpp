@@ -5,7 +5,8 @@
 #include <QDebug>
 
 namespace {
-// same as in desktop file
+// OrganizationName.ApplicationName from the [X-Sailjail] section of the
+// desktop file - sailjaild activates this name, with the path derived from it
 const char *ServiceName = "org.anttsam.meridon";
 const char *ObjectPath = "/org/anttsam/meridon";
 }
@@ -33,9 +34,18 @@ bool UrlRouter::registerService()
     return true;
 }
 
-void UrlRouter::openUrl(const QStringList &urls)
+void UrlRouter::Open(const QStringList &uris, const QVariantMap &platformData)
 {
-    qWarning() << "UrlRouter: openUrl() called with" << urls;
-    if (!urls.isEmpty())
-        emit urlReceived(urls.first());
+    qWarning() << "UrlRouter: Open() called with" << uris;
+    if (uris.isEmpty()) {
+        Activate(platformData);
+        return;
+    }
+    emit urlReceived(uris.first());
+}
+
+void UrlRouter::Activate(const QVariantMap &platformData)
+{
+    Q_UNUSED(platformData)
+    emit activateRequested();
 }

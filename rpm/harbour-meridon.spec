@@ -43,5 +43,4 @@ Unofficial Mastodon client
 %{_bindir}/%{name}
 %{_datadir}/%{name}
 %{_datadir}/applications/%{name}.desktop
-%{_datadir}/applications/%{name}-open-url.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png

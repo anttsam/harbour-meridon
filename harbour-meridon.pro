@@ -25,11 +25,6 @@ SOURCES += src/harbour-meridon.cpp \
 HEADERS += src/mediauploader.h \
     src/urlrouter.h
 
-# desktop entry claiming x-scheme-handler/https - see src/urlrouter.h
-openurl_desktop.files = harbour-meridon-open-url.desktop
-openurl_desktop.path = /usr/share/applications
-INSTALLS += openurl_desktop
-
 DISTFILES += qml/harbour-meridon.qml \
     qml/pages/AboutPage.qml \
     qml/images/harbour-meridon.png \
@@ -119,7 +114,6 @@ DISTFILES += qml/harbour-meridon.qml \
     rpm/harbour-meridon.spec \
     translations/*.ts \
     harbour-meridon.desktop \
-    harbour-meridon-open-url.desktop \
     LICENSE
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172

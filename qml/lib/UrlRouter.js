@@ -2,7 +2,7 @@
 .import "SessionManager.js" as SessionManager
 
 // Routes a URL handed to this app by the OS (see src/urlrouter.cpp /
-// harbour-meridon-open-url.desktop) to the right in-app page instead of
+// harbour-meridon.desktop) to the right in-app page instead of
 // falling back to Browser. There is no OS-level way to scope the https://
 // claim to just fediverse links (Sailfish has nothing like iOS Universal
 // Links/Android App Links) - Meridon is handed EVERY tapped https link,

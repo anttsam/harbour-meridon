@@ -27,15 +27,31 @@ int main(int argc, char *argv[])
     UrlRouter urlRouter;
     urlRouter.registerService(); // logs its own success/failure - see urlrouter.cpp
 
-    QObject::connect(&urlRouter, &UrlRouter::urlReceived, view.data(), [&view](const QString &url) {
-        qWarning() << "UrlRouter: urlReceived, forwarding to QML:" << url;
+    QObject::connect(&urlRouter, &UrlRouter::activateRequested, view.data(), [&view]() {
+        view->raise();
+        view->requestActivate();
+    });
+
+    auto forwardUrl = [&view](const QString &url) {
+        qWarning() << "UrlRouter: forwarding to QML:" << url;
         view->raise();
         view->requestActivate();
         QObject *root = view->rootObject();
         bool invoked = QMetaObject::invokeMethod(root, "handleIncomingUrl", Q_ARG(QVariant, url));
         if (!invoked)
             qWarning() << "UrlRouter: failed to invoke handleIncomingUrl on QML root";
-    });
+    };
+    QObject::connect(&urlRouter, &UrlRouter::urlReceived, view.data(), forwardUrl);
+
+    // Exec=harbour-meridon %u: a launch that isn't D-Bus activated still
+    // hands the link over as an argument
+    const QStringList args = app->arguments();
+    for (int i = 1; i < args.size(); ++i) {
+        if (args.at(i).startsWith(QLatin1String("http"))) {
+            forwardUrl(args.at(i));
+            break;
+        }
+    }
 
     return app->exec();
 }
