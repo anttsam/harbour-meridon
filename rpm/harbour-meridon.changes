@@ -1,3 +1,8 @@
+* Fri Oct 23 2026 anttsam <sami@anttila.ch> 1.5-1
+- Support for composing polls
+- Handle external opening of posts from single desktop file
+- Correct formatting of refresh notice
+
 * Tue Oct 20 2026 anttsam <sami@anttila.ch> 1.4-1
 - Refresh keeps your place in the feed and adds new posts above
 - Refresh updates counts and "ago" times, and drops deleted posts
