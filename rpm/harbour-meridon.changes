@@ -1,3 +1,6 @@
+* Fri Oct 23 2026 anttsam <sami@anttila.ch> 1.5.2-1
+- Fix package description for Harbour validation
+
 * Fri Oct 23 2026 anttsam <sami@anttila.ch> 1.5.1-1
 - Remove an unneeded dependency to pass Harbour validation
 
