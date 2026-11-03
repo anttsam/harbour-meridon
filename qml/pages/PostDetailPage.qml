@@ -3,6 +3,7 @@ import Sailfish.Silica 1.0
 import "components"
 import "../lib/SessionManager.js" as SessionManager
 import "../lib/PostMapper.js" as PostMapper
+import "../lib/RemoteThread.js" as RemoteThread
 
 AppPage {
     id: postDetailPage
@@ -13,7 +14,16 @@ AppPage {
     property string errorText: ""
     property bool repliesLoading: false
     // Drives the footer BusyIndicator, avoid two
-    readonly property bool showRepliesSpinner: repliesLoading && !busy
+    readonly property bool showRepliesSpinner: (repliesLoading && !busy) || remoteLoading
+
+    // Replies fetched from the post's own server (see RemoteThread.js). Only
+    // offered for a post from another server, and only on request, as it
+    // makes this device contact that server.
+    property bool remoteLoading: false
+    property bool remoteMerged: false
+    property var _context: null
+    readonly property string remoteHost: rawFocusPost && rawFocusPost.account
+        && rawFocusPost.account.acct.indexOf("@") >= 0 ? RemoteThread.hostOf(rawFocusPost.uri) : ""
 
     property var rawFocusPost: null
     property var rawReplies: []
@@ -43,6 +53,12 @@ AppPage {
         }
 
         PullDownMenu {
+            MenuItem {
+                text: qsTr("Load replies from %1").arg(postDetailPage.remoteHost)
+                visible: postDetailPage.remoteHost.length > 0 && !postDetailPage.remoteMerged
+                    && !postDetailPage.remoteLoading && postDetailPage._context !== null
+                onClicked: postDetailPage.loadRemoteReplies()
+            }
             MenuItem {
                 text: qsTr("Sort: Oldest first")
                 onClicked: postDetailPage.applySort("oldest")
@@ -127,6 +143,9 @@ AppPage {
         threadModel.clear()
         _sessionExpired = false
         _pendingContext = null
+        _context = null
+        remoteMerged = false
+        remoteLoading = false
 
         // Two calls, independently resolved (not joined) - the focus post
         // itself is a single small object and typically resolves much
@@ -160,10 +179,32 @@ AppPage {
                 if (postDetailPage._sessionExpired)
                     return
                 _pendingContext = response || {}
+                _context = _pendingContext
                 _processContextIfReady()
             },
             function(status, message) { postDetailPage._handleLoadFailure(status, message, false) }
         )
+    }
+
+    function loadRemoteReplies() {
+        var host = remoteHost
+        remoteLoading = true
+        RemoteThread.fetchContext(rawFocusPost, function (origin) {
+            remoteLoading = false
+            var result = RemoteThread.merge(rawFocusPost, _context.descendants || [], origin)
+            remoteMerged = true
+            if (result.added === 0) {
+                Notices.show(qsTr("No more replies found"), Notice.Short, Notice.Center)
+                return
+            }
+            _pendingContext = { ancestors: _context.ancestors || [], descendants: result.descendants }
+            _processContextIfReady()
+            Notices.show(qsTr("%n more reply(ies) loaded", "", result.added), Notice.Short, Notice.Center)
+        }, function (status, message) {
+            console.warn("[PostDetail] origin replies failed:", host, status, message)
+            remoteLoading = false
+            Notices.show(qsTr("Couldn't load replies from %1").arg(host), Notice.Short, Notice.Center)
+        })
     }
 
     function _handleLoadFailure(status, message, isFocusRequest) {
@@ -246,6 +287,7 @@ AppPage {
             // does could have it silently dropped instead of just reading
             // back false.
             ancestorRow.isFocusPost = false
+            ancestorRow.remoteOnly = false
             threadModel.append(ancestorRow)
         }
 
@@ -256,6 +298,7 @@ AppPage {
         focusRow.indented = false
         focusRow.hasDisplayedContinuation = false
         focusRow.isFocusPost = true
+        focusRow.remoteOnly = false
         threadModel.append(focusRow)
 
         // TEMP DIAGNOSTIC
@@ -318,6 +361,10 @@ AppPage {
             row.sectionLabel = qsTr("Replies")
             row.indented = false
             row.isFocusPost = false
+            // Copied from the post's own server: no id here yet, see RemoteThread.js
+            row.remoteOnly = node.post._remote === true
+            if (row.remoteOnly)
+                row.uri = ""
             rows.push(row)
 
             var children = childrenByParent[node.post.id] || []

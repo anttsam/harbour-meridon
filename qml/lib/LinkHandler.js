@@ -98,13 +98,14 @@ function resolveProfileLink(href, pageStack) {
             var accounts = (response && response.accounts) || []
             if (accounts.length > 0) {
                 pageStack.push(Qt.resolvedUrl("../pages/UserProfilePage.qml"), { did: accounts[0].id })
-            } else {
+            } else if (/^https?:/.test(href)) {
                 pageStack.push(Qt.resolvedUrl("../pages/WebViewPage.qml"), { url: href })
             }
         },
         function(status, message) {
             console.warn("[LinkHandler] profile resolve failed:", status, message)
-            pageStack.push(Qt.resolvedUrl("../pages/WebViewPage.qml"), { url: href })
+            if (/^https?:/.test(href))
+                pageStack.push(Qt.resolvedUrl("../pages/WebViewPage.qml"), { url: href })
         }
     )
 }

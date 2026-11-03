@@ -38,15 +38,46 @@ ListItem {
 
 
     onClicked: {
-        if (clickable) {
+        if (model.remoteOnly === true)
+            openRemoteOnly()
+        else if (clickable) {
             pageStack.push(Qt.resolvedUrl("../PostDetailPage.qml"), {
                 postUri: model.uri
             })
         }
     }
 
+    // A reply copied from another server's thread has no id on this one, so
+    // ask the home server to fetch it (search by URL), then open that copy
+    function openRemoteOnly() {
+        SessionManager.authenticatedRequest("GET",
+            "/api/v2/search?q=" + encodeURIComponent(model.permalink) + "&type=statuses&resolve=true&limit=1", null,
+            function (response) {
+                var statuses = (response && response.statuses) || []
+                if (statuses.length > 0)
+                    pageStack.push(Qt.resolvedUrl("../PostDetailPage.qml"), { postUri: statuses[0].id })
+                else
+                    Notices.show(qsTr("Couldn't open this reply"), Notice.Short, Notice.Center)
+            },
+            function () {
+                Notices.show(qsTr("Couldn't open this reply"), Notice.Short, Notice.Center)
+            })
+    }
+
+    function openAuthor() {
+        if (model.remoteOnly === true)
+            LinkHandler.resolveProfileLink("@" + model.handle, pageStack)
+        else
+            pageStack.push(Qt.resolvedUrl("../UserProfilePage.qml"), { did: model.authorId })
+    }
+
+    // No menu for a copied reply, none of its actions would reach the right post
+    menu: model.remoteOnly === true ? null : contextMenuComponent
+
     // Wrapped in Component to imporove scrolling performance
-    menu: Component {
+    Component {
+        id: contextMenuComponent
+
         ContextMenu {
             MenuItem {
                 text: qsTr("Quote")
@@ -319,7 +350,7 @@ ListItem {
             favourited: model.favourited
             reblogged: model.reblogged
             bookmarked: model.bookmarked
-            onReplyRequested: pageStack.push(Qt.resolvedUrl("../ComposePage.qml"), {
+            onReplyRequested: if (model.uri) pageStack.push(Qt.resolvedUrl("../ComposePage.qml"), {
                 replyToUri: model.uri,
                 replyToAuthorName: model.displayName || model.handle,
                 replyToAuthorEmojisJson: model.authorEmojisJson,
@@ -329,7 +360,7 @@ ListItem {
             onRepostToggled: postDelegate.toggleRepost()
             onLikeToggled: postDelegate.toggleLike()
             onBookmarkToggled: postDelegate.toggleBookmark()
-            onMoreRequested: postDelegate.openMenu()
+            onMoreRequested: if (model.remoteOnly !== true) postDelegate.openMenu()
         }
     }
 
@@ -465,9 +496,7 @@ ListItem {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: pageStack.push(Qt.resolvedUrl("../UserProfilePage.qml"), {
-                    did: model.authorId
-                })
+                onClicked: postDelegate.openAuthor()
             }
         }
 
@@ -676,9 +705,7 @@ ListItem {
             }
             MouseArea {
                 anchors.fill: mainAuthorRow
-                onClicked: pageStack.push(Qt.resolvedUrl("../UserProfilePage.qml"), {
-                    did: model.authorId
-                })
+                onClicked: postDelegate.openAuthor()
             }
         }
 
