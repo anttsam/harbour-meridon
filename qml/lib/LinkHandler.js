@@ -1,6 +1,7 @@
 .pragma library
 .import "SessionManager.js" as SessionManager
 .import "UrlRouter.js" as UrlRouter
+.import "PeerTube.js" as PeerTube
 
 // Classifies a tapped <a href> from rendered post/bio HTML.
 // mentionsByHref/tagsByHref (both optional) are the structured
@@ -47,25 +48,43 @@ function openLink(href, pageStack, mentionsByHref, tagsByHref) {
     } else if (link.type === "unresolvedMention") {
         resolveProfileLink(link.href, pageStack)
     } else {
-        // No structured mention/tag data backed this href, so it's either
-        // a genuinely external link or a Mastodon (or fediverse) post/
-        // profile permalink someone pasted as plain text instead of using
-        // a real quote-post attach or @mention - same resolution
-        // UrlRouter.js already does for links the OS hands this app.
-        UrlRouter.resolveAndRoute(link.href,
-            function (statusId) {
-                pageStack.push(Qt.resolvedUrl("../pages/PostDetailPage.qml"), { postUri: statusId })
-            },
-            function (accountId) {
-                pageStack.push(Qt.resolvedUrl("../pages/UserProfilePage.qml"), { did: accountId })
-            },
-            function (tag) {
-                pageStack.push(Qt.resolvedUrl("../pages/HashtagPage.qml"), { hashtag: tag })
-            },
-            function () {
-                pageStack.push(Qt.resolvedUrl("../pages/WebViewPage.qml"), { url: link.href })
+        // A PeerTube video link would resolve to a Mastodon status holding
+        // only its title and a link, so it is checked first. The URL shape
+        // alone is not proof (other sites use /w/ too), hence the API call
+        // before committing to PeerTubePage.
+        var video = PeerTube.parseVideoUrl(link.href)
+        if (video) {
+            PeerTube.fetchVideo(video.host, video.id, function (json) {
+                pageStack.push(Qt.resolvedUrl("../pages/PeerTubePage.qml"),
+                               { host: video.host, videoId: video.id, pageUrl: link.href, video: json })
+            }, function () {
+                openResolved(link.href, pageStack)
             })
+        } else {
+            openResolved(link.href, pageStack)
+        }
     }
+}
+
+// No structured mention/tag data backed this href, so it's either
+// a genuinely external link or a Mastodon (or fediverse) post/
+// profile permalink someone pasted as plain text instead of using
+// a real quote-post attach or @mention - same resolution
+// UrlRouter.js already does for links the OS hands this app.
+function openResolved(href, pageStack) {
+    UrlRouter.resolveAndRoute(href,
+        function (statusId) {
+            pageStack.push(Qt.resolvedUrl("../pages/PostDetailPage.qml"), { postUri: statusId })
+        },
+        function (accountId) {
+            pageStack.push(Qt.resolvedUrl("../pages/UserProfilePage.qml"), { did: accountId })
+        },
+        function (tag) {
+            pageStack.push(Qt.resolvedUrl("../pages/HashtagPage.qml"), { hashtag: tag })
+        },
+        function () {
+            pageStack.push(Qt.resolvedUrl("../pages/WebViewPage.qml"), { url: href })
+        })
 }
 
 // A "/@username" link with no structured mention data behind it (bios

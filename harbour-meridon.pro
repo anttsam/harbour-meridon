@@ -27,6 +27,7 @@ HEADERS += src/mediauploader.h \
 
 DISTFILES += qml/harbour-meridon.qml \
     qml/pages/AboutPage.qml \
+    qml/pages/PeerTubePage.qml \
     qml/images/harbour-meridon.png \
     qml/cover/CoverPage.qml \
     qml/pages/ComposePage.qml \
@@ -56,6 +57,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/pages/components/PostDelegate.qml \
     qml/pages/components/PostImageGrid.qml \
     qml/pages/components/PostLinkCard.qml \
+    qml/pages/components/PeerTubeComment.qml \
     qml/pages/components/PostPoll.qml \
     qml/pages/components/PostContentWarning.qml \
     qml/pages/components/PostQuoteCard.qml \
@@ -81,6 +83,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/lib/InstanceAppStorage.js \
     qml/lib/LinkHandler.js \
     qml/lib/LocalDb.js \
+    qml/lib/PeerTube.js \
     qml/lib/PinnedFeedsStorage.js \
     qml/lib/PostEvents.js \
     qml/lib/PostMapper.js \

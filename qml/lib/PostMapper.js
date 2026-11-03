@@ -186,6 +186,9 @@ function mapStatus(status, timeAgoFn) {
             thumbUrl: inner.card.image || "",
             domain: extractDomain(inner.card.url)
         }
+        var peertube = peerTubeOf(inner.card)
+        if (peertube)
+            external.peertube = peertube
     }
 
     // Mastodon's own equivalent of an autoplaying "GIF" is a media
@@ -377,6 +380,23 @@ function parseNextCursor(linkHeader) {
             return decodeURIComponent(match[1])
     }
     return ""
+}
+
+// PeerTube serves an oEmbed whose iframe points at <host>/videos/embed/<id>,
+// and Mastodon keeps that iframe in card.html. Returns {host, id} so the card
+// can open PeerTubePage.qml, else null. Self-contained like the rest of this
+// file (no .import) because the feed mapper worker loads it.
+function peerTubeOf(card) {
+    var embed = /\/\/([^\/"'?#]+)\/videos\/embed\/([A-Za-z0-9-]+)/i.exec(card.html || "")
+    if (embed)
+        return { host: embed[1], id: embed[2] }
+
+    if ((card.provider_name || "") === "PeerTube") {
+        var watch = /^https?:\/\/([^\/?#]+)\/(?:w|videos\/watch)\/([A-Za-z0-9-]{8,40})(?:[\/?#]|$)/i.exec(card.url)
+        if (watch)
+            return { host: watch[1], id: watch[2] }
+    }
+    return null
 }
 
 function extractDomain(url) {

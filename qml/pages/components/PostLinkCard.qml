@@ -127,7 +127,15 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            if (postLinkCard.link)
+            if (!postLinkCard.link)
+                return
+            if (postLinkCard.link.peertube)
+                pageStack.push(Qt.resolvedUrl("../PeerTubePage.qml"), {
+                    host: postLinkCard.link.peertube.host,
+                    videoId: postLinkCard.link.peertube.id,
+                    pageUrl: postLinkCard.link.uri
+                })
+            else
                 pageStack.push(Qt.resolvedUrl("../WebViewPage.qml"), {
                     url: postLinkCard.link.uri
                 })

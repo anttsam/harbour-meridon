@@ -3,6 +3,7 @@ import Sailfish.Silica 1.0
 import "pages"
 import "lib/FeedsManager.js" as FeedsManager
 import "lib/UrlRouter.js" as UrlRouter
+import "lib/PeerTube.js" as PeerTube
 
 ApplicationWindow {
     id: applicationWindow
@@ -13,6 +14,20 @@ ApplicationWindow {
     // Called from main.cpp (UrlRouter::urlReceived) when the OS hands https:// link
     function handleIncomingUrl(url) {
         console.log("[UrlRouter] handleIncomingUrl:", url)
+        var video = PeerTube.parseVideoUrl(url)
+        if (video) {
+            PeerTube.fetchVideo(video.host, video.id, function (json) {
+                pageStack.push(Qt.resolvedUrl("pages/PeerTubePage.qml"),
+                               { host: video.host, videoId: video.id, pageUrl: url, video: json })
+            }, function () {
+                routeIncomingUrl(url)
+            })
+            return
+        }
+        routeIncomingUrl(url)
+    }
+
+    function routeIncomingUrl(url) {
         UrlRouter.resolveAndRoute(url,
             function (statusId) {
                 console.log("[UrlRouter] -> PostDetailPage", statusId)
