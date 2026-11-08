@@ -41,6 +41,8 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/pages/MainPage.qml \
     qml/pages/OAuthLoginPage.qml \
     qml/pages/PostDetailPage.qml \
+    qml/pages/AppearanceSettingsPage.qml \
+    qml/pages/ReadingSettingsPage.qml \
     qml/pages/SettingsPage.qml \
     qml/pages/UserProfilePage.qml \
     qml/pages/VideoPlayerPage.qml \
@@ -69,6 +71,11 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/pages/components/RoundedAvatar.qml \
     qml/pages/components/ScrollDirectionTracker.qml \
     qml/pages/components/SearchView.qml \
+    qml/pages/components/SettingsCombo.qml \
+    qml/pages/components/SettingsEntry.qml \
+    qml/pages/components/SettingsPreview.qml \
+    qml/pages/components/SettingsSlider.qml \
+    qml/pages/components/SettingsSwitch.qml \
     qml/pages/components/TabBarButton.qml \
     qml/lib/FeedsManager.js \
     qml/lib/FeedMapperWorker.js \
