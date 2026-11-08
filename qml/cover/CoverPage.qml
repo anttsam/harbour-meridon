@@ -74,13 +74,16 @@ CoverBackground {
         visible: AppLib.BackgroundManager.affectCover
     }
 
-    Timer {
-        interval: 2000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: cover.homeContent = FeedsManager.peekFeedContent("home")
+    // Kept in a property so the same function object is used to unregister
+    property var homeContentListener: function () {
+        cover.homeContent = FeedsManager.peekFeedContent("home")
     }
+
+    Component.onCompleted: {
+        FeedsManager.addHomeContentListener(homeContentListener)
+        homeContentListener()
+    }
+    Component.onDestruction: FeedsManager.removeHomeContentListener(homeContentListener)
 
     /*Image {
         id: appIcon

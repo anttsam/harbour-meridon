@@ -150,6 +150,28 @@ function removeFeed(feedId) {
         _removeListener(feedId)
 }
 
+// The cover shows the first posts of the home feed's model but is not tied
+// to any feed bucket's lifetime, so it is told when the home bucket is
+// created or dropped instead of polling for it. Unlike the listeners above
+// these survive resetState(): the cover outlives a logout.
+var _homeContentListeners = []
+
+function addHomeContentListener(fn) {
+    if (_homeContentListeners.indexOf(fn) === -1)
+        _homeContentListeners.push(fn)
+}
+
+function removeHomeContentListener(fn) {
+    var idx = _homeContentListeners.indexOf(fn)
+    if (idx !== -1)
+        _homeContentListeners.splice(idx, 1)
+}
+
+function _notifyHomeContent() {
+    for (var i = 0; i < _homeContentListeners.length; i++)
+        _homeContentListeners[i]()
+}
+
 // Registered as SessionManager's logout listener - without this, a relogin
 // reused feedContent entries whose ListModel died with the previous
 // session's FeedCarouselView (dead QObject refs).
@@ -162,6 +184,8 @@ function resetState() {
     dirty = false
     _dirtyListener = null
     _removeListener = null
+    // the cover must let go of the previous session's (now dead) home model
+    _notifyHomeContent()
 }
 
 SessionManager.onLogout(resetState)
@@ -249,6 +273,8 @@ function getFeedContent(feedId, anchor) {
             positionKeeper: null,
             keeperOwner: null
         }
+        if (feedId === "home")
+            _notifyHomeContent()
     }
     return feedContent[feedId]
 }
@@ -287,6 +313,8 @@ function evictFeedContent(feedId) {
         return
 
     delete feedContent[feedId]
+    if (feedId === "home")
+        _notifyHomeContent()
     var mruIdx = _feedContentMRU.indexOf(feedId)
     if (mruIdx !== -1)
         _feedContentMRU.splice(mruIdx, 1)
