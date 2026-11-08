@@ -24,7 +24,8 @@ Item {
             value: feed.value,
             displayName: feed.displayName,
             avatarUrl: feed.avatarUrl || "",
-            pinned: feed.pinned === true
+            pinned: feed.pinned === true,
+            exclusive: feed.exclusive === true
         }
     }
 
@@ -35,7 +36,8 @@ Item {
             value: "",
             displayName: qsTr("More"),
             avatarUrl: "",
-            pinned: false
+            pinned: false,
+            exclusive: false
         }
     }
 
@@ -62,7 +64,8 @@ Item {
             value: row.value,
             displayName: row.displayName,
             avatarUrl: row.avatarUrl,
-            pinned: row.pinned
+            pinned: row.pinned,
+            exclusive: row.exclusive
         }
     }
 

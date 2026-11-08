@@ -3,6 +3,7 @@ import Sailfish.Silica 1.0
 import "../../lib" as AppLib
 import "../../lib/SessionManager.js" as SessionManager
 import "../../lib/FeedsManager.js" as FeedsManager
+import "../../lib/FeedMarkerPolicy.js" as MarkerPolicy
 
 // One feed's post list
 
@@ -33,6 +34,16 @@ Item {
         var content = FeedsManager.getFeedContent(feed.id, contentAnchor)
         if (isCurrent && !content.loadedOnce && !content.busy)
             load(true)
+        else
+            checkStale()
+    }
+
+    // A list loaded earlier whose Following feed has since got new posts (see
+    // FeedsManager.markListsStale()) merge-refreshes once it is on screen.
+    function checkStale() {
+        var content = FeedsManager.peekFeedContent(feed.id)
+        if (isCurrent && content && content.loadedOnce && content.stale && !content.busy && !busy)
+            refresh()
     }
     onIsCurrentChanged: checkLoad()
     Component.onCompleted: {
@@ -47,6 +58,16 @@ Item {
         }
     }
     Component.onDestruction: {
+        // The carousel recycles panes; don't lose a position still waiting
+        // for its debounce.
+        if (markerTimer.running) {
+            try {
+                writeMarker()
+            } catch (e) {
+                console.warn("[FeedPane] flushing home marker failed:", e)
+            }
+        }
+
         var content = FeedsManager.peekFeedContent(feed.id)
         if (content && content.keeperOwner === feedPane) {
             content.positionKeeper = null
@@ -126,15 +147,66 @@ Item {
         if (reset)
             errorText = ""
 
-        FeedsManager.loadFeedContent(feed, reset, contentAnchor, function(success, error401, message, status) {
+        var done = function(success, error401, message, status, landingIndex) {
             busy = false
             if (error401) {
                 SessionManager.clearSession()
                 pageStack.animatorReplace(Qt.resolvedUrl("../FirstPage.qml"))
             } else if (!success) {
                 errorText = qsTr("Couldn't load feed (%1)").arg(message || status)
+            } else if (landingIndex !== undefined) {
+                showLanding(landingIndex)
             }
-        })
+        }
+
+        // The first load of the home feed, or of a list (a filtered view of
+        // it), in this app run reopens where the user stopped reading in
+        // Following (see FeedsManager.loadFeedAtMarker()).
+        var content = FeedsManager.getFeedContent(feed.id, contentAnchor)
+        if (reset && !content.loadedOnce && MarkerPolicy.usesFollowingMarker(feed))
+            FeedsManager.loadFeedAtMarker(feed, contentAnchor, done)
+        else
+            FeedsManager.loadFeedContent(feed, reset, contentAnchor, done)
+    }
+
+    // Scrolls the freshly loaded home feed so row `index` is at the top, the
+    // posts above it being the ones that arrived since the user last read.
+    // The view is positioned straight away and once more on the next event
+    // loop turn, in case it had not laid out the new rows yet.
+    property int landingIndex: -1
+
+    function showLanding(index) {
+        markPositionProgrammatic()
+        if (index <= 0)
+            return
+
+        landingIndex = index
+        applyLanding()
+        landingTimer.restart()
+
+        if (index === 1)
+            Notices.show(qsTr("%n new post", "", index), Notice.Short, Notice.Top, 0, Theme.itemSizeSmall)
+        else
+            Notices.show(qsTr("%n new posts", "", index), Notice.Short, Notice.Top, 0, Theme.itemSizeSmall)
+    }
+
+    function applyLanding() {
+        if (landingIndex < 0)
+            return
+
+        listView.positionViewAtIndex(landingIndex, ListView.Beginning)
+        scrollTracker.rebase()
+        markPositionProgrammatic()
+    }
+
+    Timer {
+        id: landingTimer
+        interval: 0
+        repeat: false
+        onTriggered: {
+            feedPane.applyLanding()
+            feedPane.landingIndex = -1
+        }
     }
 
     // Pull-to-refresh: merges new posts in at the top and updates the loaded
@@ -178,16 +250,34 @@ Item {
     // far into it we are, insert, then put that same post back where it was
     // - the new posts end up above, reachable by scrolling up.
     function keepPositionWhileInserting(count, insert) {
+        var top = topVisible()
+
+        insert()
+
+        listView.positionViewAtIndex(top.index + count, ListView.Beginning)
+        listView.contentY += top.offset
+
+        // That jump isn't a scroll the user made, so don't let the tracker
+        // judge their next drag against where contentY used to be - it would
+        // read scrolling up toward the new posts as a long scroll down and
+        // flash the top bar away.
+        scrollTracker.rebase()
+        markPositionProgrammatic()
+    }
+
+    // The post at the top of the view: its index in the model, and how far
+    // into it the view is scrolled.
+    function topVisible() {
         var x = listView.contentX + listView.width / 2
         var probes = [1, Theme.paddingSmall, Theme.paddingLarge, Theme.itemSizeSmall]
-        var anchorIndex = -1
+        var index = -1
         var offset = 0
 
-        for (var i = 0; i < probes.length && anchorIndex < 0; i++) {
+        for (var i = 0; i < probes.length && index < 0; i++) {
             var y = listView.contentY + probes[i]
             var idx = listView.indexAt(x, y)
             if (idx >= 0) {
-                anchorIndex = idx
+                index = idx
                 var item = listView.itemAt(x, y)
                 offset = item ? listView.contentY - item.y : 0
             }
@@ -195,24 +285,98 @@ Item {
 
         // Nothing under the probes - e.g. overscrolled above the first post
         // while the pull-down menu is still settling. That's "at the top".
-        if (anchorIndex < 0) {
-            anchorIndex = 0
+        if (index < 0) {
+            index = 0
             offset = 0
         }
 
-        insert()
+        return { index: index, offset: offset }
+    }
 
-        listView.positionViewAtIndex(anchorIndex + count, ListView.Beginning)
-        listView.contentY += offset
+    // Reading position (home feed only - the only timeline Mastodon's
+    // markers cover): the newest post the user has had at the top of the
+    // list is written as the server-side "home" marker once they have
+    // stopped scrolling, and when the app goes to the background, so a later
+    // cold start can reopen there with everything newer above it. It only
+    // moves to newer posts - scrolling down through older ones never lowers
+    // it. See docs/feed-position-markers-spec.md.
+    //
+    // Only a scroll the user made counts (userMoved, set by dragging). Moves
+    // made by code - the tap-to-top below, the position kept across an insert
+    // - clear it, so just opening the app, or being jumped around by it, can
+    // never overwrite where the user actually stopped reading.
+    property bool userMoved: false
+    property string newestSeenId: ""
 
-        // That jump isn't a scroll the user made, so don't let the tracker
-        // judge their next drag against where contentY used to be - it would
-        // read scrolling up toward the new posts as a long scroll down and
-        // flash the top bar away.
-        scrollTracker.rebase()
+    // Called when a drag starts (the view the user was looking at before
+    // moving it, e.g. the newest posts at the top of a fresh feed) and when
+    // movement ends.
+    function noteSeen() {
+        if (feed.type !== "home")
+            return
+
+        var content = FeedsManager.peekFeedContent(feed.id)
+        if (!content || listView.count === 0)
+            return
+
+        var row = content.model.get(topVisible().index)
+        if (row && MarkerPolicy.compareIds(row.timelineId, newestSeenId) > 0)
+            newestSeenId = row.timelineId
+    }
+
+    function markPositionProgrammatic() {
+        userMoved = false
+        markerTimer.stop()
+    }
+
+    function writeMarker() {
+        markerTimer.stop()
+        if (feed.type !== "home" || newestSeenId.length === 0)
+            return
+
+        var content = FeedsManager.peekFeedContent(feed.id)
+        if (!content)
+            return
+
+        if (MarkerPolicy.shouldWrite(newestSeenId, content.lastMarkerId, userMoved, content.restoring))
+            FeedsManager.saveMarker(content, newestSeenId)
+    }
+
+    Timer {
+        id: markerTimer
+        interval: MarkerPolicy.WRITE_DEBOUNCE_MS
+        repeat: false
+        onTriggered: feedPane.writeMarker()
+    }
+
+    Connections {
+        target: listView
+        onDraggingChanged: {
+            if (listView.dragging) {
+                feedPane.noteSeen()
+                feedPane.userMoved = true
+            }
+        }
+        onMovementEnded: {
+            if (feedPane.userMoved && feedPane.feed.type === "home") {
+                feedPane.noteSeen()
+                markerTimer.restart()
+            }
+        }
+    }
+
+    Connections {
+        target: Qt.application
+        onActiveChanged: {
+            if (!Qt.application.active)
+                feedPane.writeMarker()
+            else
+                feedPane.checkStale()
+        }
     }
 
     function scrollToTop() {
+        markPositionProgrammatic()
         listView.scrollToTop()
         scrollTracker.reset()
     }

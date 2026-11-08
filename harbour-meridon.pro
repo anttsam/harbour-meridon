@@ -79,6 +79,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/pages/components/TabBarButton.qml \
     qml/lib/FeedsManager.js \
     qml/lib/FeedMapperWorker.js \
+    qml/lib/FeedMarkerPolicy.js \
     qml/lib/BackgroundManager.qml \
     qml/lib/EmojiManager.qml \
     qml/lib/EmojiCodepoints.js \

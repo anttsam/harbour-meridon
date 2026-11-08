@@ -2,6 +2,7 @@
 .import "SessionManager.js" as SessionManager
 .import "PostMapper.js" as PostMapper
 .import "PinnedFeedsStorage.js" as PinnedFeedsStorage
+.import "FeedMarkerPolicy.js" as MarkerPolicy
 
 // In-memory cache, shared across every QML file that imports this module
 var feeds = []       // [{id, type, value, pinned, displayName, avatarUrl}]
@@ -181,6 +182,8 @@ function resetState() {
     loaded = false
     feedContent = {}
     _feedContentMRU = []
+    _markerWriting = false
+    _markerQueued = null
     dirty = false
     _dirtyListener = null
     _removeListener = null
@@ -265,6 +268,16 @@ function getFeedContent(feedId, anchor) {
             nextCursor: "",
             lastLoadMoreCursor: "",
             loadedOnce: false,
+            // The home feed's last read position as the server knows it
+            // (see saveMarker() below) - what was last written, so an
+            // unchanged position is never written twice. "restoring" is set
+            // while the list shows a startup view that must not be written
+            // back as the user's position.
+            lastMarkerId: "",
+            restoring: false,
+            // Set on a loaded list when Following got new posts since (see
+            // markListsStale()); cleared by whichever fetch refreshes it.
+            stale: false,
             // Registered by whichever FeedPane is showing this feed, so
             // refreshFeedContent() can keep that pane's scroll position
             // across an insert at the top no matter who triggered the
@@ -351,6 +364,7 @@ function loadFeedContent(feed, reset, anchor, onDone) {
 
     content.busy = true
     if (reset) {
+        content.stale = false
         content.nextCursor = ""
         content.lastLoadMoreCursor = ""
     }
@@ -394,6 +408,226 @@ function loadFeedContent(feed, reset, anchor, onDone) {
     )
 }
 
+// Cold-start load of a feed that reopens where the user stopped reading -
+// see docs/feed-position-markers-spec.md. Asks the server for the "home"
+// marker (the newest post the user had seen in Following, saved by
+// saveMarker() below) and, at the same time, for the newest page of the
+// timeline. A list is a filtered view of Following, so it is placed against
+// the same marker (only Home ever writes it); a feed that
+// MarkerPolicy.usesFollowingMarker() rejects skips the marker request and
+// loads plainly. If the
+// marker post is in that page it is the landing row; if not, older pages are
+// fetched (at most MarkerPolicy.RESTORE_MAX_PAGES in all) until one is. The
+// landing row is the first row at or older than the marker, so a marker post
+// that has since been deleted or filtered lands on the next older one.
+// Nothing touches the model until the decision is made, like
+// refreshFeedContent(). Everything that is not a clean hit - no marker, a
+// server without markers, a failed marker request, a gap too big to bridge -
+// ends as a plain first load: all fetched posts, newest first, landing index
+// -1. onDone has loadFeedContent()'s shape plus a fifth argument: the model
+// index of the row to scroll to the top of the view (the posts above it are
+// the ones that arrived since), or -1 to stay at the top.
+function loadFeedAtMarker(feed, anchor, onDone) {
+    var content = getFeedContent(feed.id, anchor)
+
+    // Same reasoning as refreshFeedContent(): report done so the caller's
+    // own busy flag can't get stuck.
+    if (content.busy) {
+        onDone(true, false, "", 0, -1)
+        return
+    }
+
+    content.busy = true
+    content.restoring = true
+    content.stale = false
+    content.nextCursor = ""
+    content.lastLoadMoreCursor = ""
+
+    var markerId = ""
+    var rows = []       // everything fetched so far, newest first
+    var cursor = ""     // for the page after the last one fetched
+    var pages = 0
+    var extraFetched = false
+    var useMarker = MarkerPolicy.usesFollowingMarker(feed)
+    var waiting = useMarker ? 2 : 1 // the marker request and the first page
+    var firstPageError = null
+
+    function fail(status, message) {
+        content.busy = false
+        content.restoring = false
+        if (status === 401) {
+            console.warn("[FeedsManager] session invalid, forcing re-login")
+            onDone(false, true, "", status, -1)
+        } else {
+            onDone(false, false, message, status, -1)
+        }
+    }
+
+    function finish(landingIndex) {
+        content.model.clear()
+        for (var i = 0; i < rows.length; i++)
+            content.model.append(rows[i])
+
+        content.nextCursor = cursor
+        content.lastMarkerId = markerId
+        content.loadedOnce = true
+        content.busy = false
+        content.restoring = false
+        console.log("[FeedsManager] loaded", feed.displayName, "-", rows.length, "posts in", pages,
+            "page(s), marker", markerId || "(none)", "- landing index", landingIndex)
+        onDone(true, false, "", 0, landingIndex)
+    }
+
+    function fetchPage(maxId, onPage, onError) {
+        var path = _feedPath(feed, MarkerPolicy.PAGE_SIZE)
+        if (maxId)
+            path += "&max_id=" + encodeURIComponent(maxId)
+
+        SessionManager.authenticatedRequest("GET", path, null,
+            function(response, linkHeader) {
+                var pageCursor = PostMapper.parseNextCursor(linkHeader)
+                mapStatusesAsync(response || [], function(mapped) {
+                    onPage(mapped, pageCursor)
+                })
+            },
+            onError
+        )
+    }
+
+    // Appends the next older page. Pages after the first are a bonus: if
+    // one fails, giveUp() carries on with what has been fetched already.
+    function fetchMore(then, giveUp) {
+        fetchPage(cursor,
+            function(mapped, pageCursor) {
+                pages++
+                for (var i = 0; i < mapped.length; i++)
+                    rows.push(mapped[i])
+                cursor = pageCursor
+                then()
+            },
+            function(status, message) {
+                if (status === 401) {
+                    fail(status, message)
+                } else {
+                    console.warn("[FeedsManager] older home page failed:", status, message)
+                    giveUp()
+                }
+            })
+    }
+
+    function decide() {
+        if (markerId.length === 0) {
+            finish(-1)
+            return
+        }
+
+        var landing = MarkerPolicy.findLandingIndex(rows, markerId)
+        if (landing >= 0) {
+            if (!extraFetched && MarkerPolicy.needsExtraPage(rows, landing, cursor.length > 0)) {
+                // Rows are only ever appended below, so landing stays valid.
+                extraFetched = true
+                fetchMore(function() { finish(landing) }, function() { finish(landing) })
+                return
+            }
+            finish(landing)
+            return
+        }
+
+        if (cursor.length > 0 && pages < MarkerPolicy.RESTORE_MAX_PAGES) {
+            fetchMore(decide, function() { finish(-1) })
+            return
+        }
+
+        finish(-1) // marker too far back, or gone from the server's timeline
+    }
+
+    function ready() {
+        waiting--
+        if (waiting > 0)
+            return
+        if (firstPageError)
+            fail(firstPageError.status, firstPageError.message)
+        else
+            decide()
+    }
+
+    if (useMarker) {
+        SessionManager.authenticatedRequest("GET", "/api/v1/markers?timeline[]=home", null,
+            function(response) {
+                var home = response && response.home
+                markerId = (home && home.last_read_id) ? String(home.last_read_id) : ""
+                ready()
+            },
+            function(status, message) {
+                // A server without markers, or a bad moment: just load as usual.
+                console.warn("[FeedsManager] reading home marker failed:", status, message)
+                markerId = ""
+                ready()
+            }
+        )
+    }
+
+    fetchPage("",
+        function(mapped, pageCursor) {
+            pages = 1
+            rows = mapped
+            cursor = pageCursor
+            ready()
+        },
+        function(status, message) {
+            firstPageError = { status: status, message: message }
+            ready()
+        })
+}
+
+// Remembers where the user stopped reading the home feed, as Mastodon's own
+// "home" marker (POST /api/v1/markers), so a later cold start can reopen
+// there - see docs/feed-position-markers-spec.md. timelineId is the id of the
+// post at the top of the list. Best-effort and silent: a failed write is only
+// logged, and only the latest position is worth sending, so one that arrives
+// while another is in flight waits for it and replaces anything queued before
+// it. A 409 means the marker changed under us mid-update; the same write is
+// simply tried again.
+var _markerWriting = false
+var _markerQueued = null // {content, timelineId}
+
+function saveMarker(content, timelineId) {
+    if (_markerWriting) {
+        _markerQueued = { content: content, timelineId: timelineId }
+        return
+    }
+
+    _markerWriting = true
+    _postMarker(timelineId, MarkerPolicy.WRITE_RETRIES, function(ok) {
+        _markerWriting = false
+        if (ok)
+            content.lastMarkerId = timelineId
+
+        var queued = _markerQueued
+        _markerQueued = null
+        if (queued && queued.timelineId !== queued.content.lastMarkerId)
+            saveMarker(queued.content, queued.timelineId)
+    })
+}
+
+function _postMarker(timelineId, retriesLeft, done) {
+    SessionManager.authenticatedRequest("POST", "/api/v1/markers",
+        { home: { last_read_id: timelineId } },
+        function() {
+            console.log("[FeedsManager] home marker saved:", timelineId)
+            done(true)
+        },
+        function(status, message) {
+            if (status === 409 && retriesLeft > 0) {
+                _postMarker(timelineId, retriesLeft - 1, done)
+                return
+            }
+            console.warn("[FeedsManager] saving home marker failed:", status, message)
+            done(false)
+        }
+    )
+}
+
 // Timeline endpoint for a feed with the page size already applied, so
 // callers just append further &params. Shared by loadFeedContent() and
 // refreshFeedContent() so the two can't drift apart.
@@ -412,6 +646,25 @@ function _feedPath(feed, limit) {
 
 var REFRESH_PAGE_SIZE = 40
 var REFRESH_MAX_PAGES = 3
+
+// Flags every already-loaded, non-exclusive list as out of date after the Home
+// feed got new posts: a list is a filtered view of Following (an exclusive one
+// is not - its members never appear there), so it has new posts too. The
+// flag is acted on lazily by FeedPane when the list is next on screen, rather
+// than refreshing them all up front - most lists won't be opened this session,
+// and each refresh is up to three requests. A list that isn't loaded yet needs
+// no flag: it loads fresh when first shown.
+function markListsStale() {
+    for (var i = 0; i < feeds.length; i++) {
+        var f = feeds[i]
+        if (f.type !== "list" || !MarkerPolicy.usesFollowingMarker(f))
+            continue
+
+        var content = feedContent[f.id]
+        if (content && content.loadedOnce)
+            content.stale = true
+    }
+}
 
 // Pull-to-refresh that keeps what's already loaded: fetches the newest
 // page(s), then matches them against the model by timelineId. Posts not in
@@ -451,6 +704,7 @@ function refreshFeedContent(feed, anchor, onDone) {
     }
 
     content.busy = true
+    content.stale = false
 
     function indexByTimelineId() {
         var map = {}
@@ -539,6 +793,12 @@ function refreshFeedContent(feed, anchor, onDone) {
         }
 
         content.busy = false
+
+        // What is new in Following is new in the lists that are a filtered
+        // view of it - they refresh themselves when next shown.
+        if (feed.type === "home" && (newRows.length > 0 || !overlap))
+            markListsStale()
+
         onDone(true, false, "", 0, newRows.length)
     }
 
@@ -660,7 +920,10 @@ function loadFeeds(onDone) {
                         value: l.id,
                         pinned: true,
                         displayName: l.title || "Untitled list",
-                        avatarUrl: ""
+                        avatarUrl: "",
+                        // Members hidden from Home: Following's read marker
+                        // says nothing about this list (MarkerPolicy).
+                        exclusive: l.exclusive === true
                     }
                 })
             pending -= 1
