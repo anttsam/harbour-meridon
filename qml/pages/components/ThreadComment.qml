@@ -3,11 +3,11 @@ import Sailfish.Silica 1.0
 import "../../lib" as AppLib
 import "../../lib/PostMapper.js" as PostMapper
 
-// One row of PeerTubePage's comment list. Replies are indented by depth, up
-// to a cap so deep threads still leave room for text.
+// One comment row of PeerTubePage and LemmyPage. Replies are indented by
+// depth, up to a cap so deep threads still leave room for text.
 
 Item {
-    id: peerTubeComment
+    id: threadComment
 
     property int depth: 0
     property string html: ""
@@ -19,8 +19,13 @@ Item {
     property int totalReplies: 0
     property bool repliesLoaded: false
     property bool repliesBusy: false
+    // Lemmy only: the whole thread is loaded, so loaded replies can be hidden again
+    property bool canHide: false
+    property bool showScore: false
+    property int score: 0
 
     signal showReplies()
+    signal hideReplies()
     signal linkClicked(string link)
 
     readonly property real indent: Math.min(depth, 3) * Theme.paddingLarge * 1.5
@@ -30,10 +35,10 @@ Item {
 
     RoundedAvatar {
         id: avatar
-        x: Theme.horizontalPageMargin + peerTubeComment.indent
+        x: Theme.horizontalPageMargin + threadComment.indent
         y: Theme.paddingSmall
-        size: Theme.iconSizeSmall
-        source: peerTubeComment.avatarUrl
+        size: Theme.iconSizeMedium
+        source: threadComment.avatarUrl
         showBorder: false
     }
 
@@ -41,7 +46,7 @@ Item {
         id: contentColumn
         x: avatar.x + avatar.width + Theme.paddingMedium
         y: Theme.paddingSmall
-        width: peerTubeComment.width - x - Theme.horizontalPageMargin
+        width: threadComment.width - x - Theme.horizontalPageMargin
         spacing: Theme.paddingSmall
 
         Row {
@@ -49,8 +54,9 @@ Item {
             spacing: Theme.paddingSmall
 
             AppLabel {
-                width: Math.min(implicitWidth, parent.width - timeLabel.implicitWidth - parent.spacing)
-                text: peerTubeComment.authorName
+                width: Math.min(implicitWidth, parent.width - timeLabel.implicitWidth
+                                - (scoreLabel.visible ? scoreLabel.implicitWidth : 0) - 2 * parent.spacing)
+                text: threadComment.authorName
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: Theme.fontSizeExtraSmall * sizeMultiplier
                 bold: true
@@ -61,15 +67,24 @@ Item {
             AppLabel {
                 id: timeLabel
                 // TimeManager.tick is read only so this re-evaluates when it is bumped
-                text: { AppLib.TimeManager.tick; return peerTubeComment.createdAt ? PostMapper.formatTimeAgo(peerTubeComment.createdAt) : "" }
+                text: { AppLib.TimeManager.tick; return threadComment.createdAt ? PostMapper.formatTimeAgo(threadComment.createdAt) : "" }
                 font.pixelSize: Theme.fontSizeExtraSmall * sizeMultiplier
                 color: Theme.secondaryColor
+            }
+
+            AppLabel {
+                id: scoreLabel
+                visible: threadComment.showScore
+                text: qsTr("%n point(s)", "", threadComment.score)
+                font.pixelSize: Theme.fontSizeExtraSmall * sizeMultiplier
+                color: Theme.secondaryColor
+                opacity: Theme.opacityHigh
             }
         }
 
         AppLabel {
             width: parent.width
-            visible: peerTubeComment.isDeleted
+            visible: threadComment.isDeleted
             text: qsTr("Comment deleted")
             font.pixelSize: Theme.fontSizeSmall * sizeMultiplier
             font.italic: true
@@ -79,12 +94,12 @@ Item {
         Item {
             width: parent.width
             height: commentText.implicitHeight
-            visible: !peerTubeComment.isDeleted
+            visible: !threadComment.isDeleted
 
             AppLabel {
                 id: commentText
                 anchors.fill: parent
-                text: PostMapper.styleParagraphs(PostMapper.styleLinks(peerTubeComment.html,
+                text: PostMapper.styleParagraphs(PostMapper.styleLinks(threadComment.html,
                     palette.secondaryHighlightColor), Theme.paddingSmall)
                 textFormat: Text.RichText
                 useCustomFont: true
@@ -100,7 +115,7 @@ Item {
                 onClicked: {
                     var link = commentText.linkAt(mouse.x, mouse.y)
                     if (link.length > 0)
-                        peerTubeComment.linkClicked(link)
+                        threadComment.linkClicked(link)
                 }
             }
         }
@@ -108,15 +123,29 @@ Item {
         BackgroundItem {
             width: parent.width
             height: Theme.itemSizeExtraSmall
-            visible: peerTubeComment.totalReplies > 0 && !peerTubeComment.repliesLoaded
-            enabled: !peerTubeComment.repliesBusy
-            onClicked: peerTubeComment.showReplies()
+            visible: threadComment.canHide && threadComment.totalReplies > 0 && threadComment.repliesLoaded
+            onClicked: threadComment.hideReplies()
 
             AppLabel {
                 anchors.verticalCenter: parent.verticalCenter
-                text: peerTubeComment.repliesBusy
+                text: qsTr("Hide replies")
+                font.pixelSize: Theme.fontSizeExtraSmall * sizeMultiplier
+                color: parent.highlighted ? palette.highlightColor : palette.secondaryHighlightColor
+            }
+        }
+
+        BackgroundItem {
+            width: parent.width
+            height: Theme.itemSizeExtraSmall
+            visible: threadComment.totalReplies > 0 && !threadComment.repliesLoaded
+            enabled: !threadComment.repliesBusy
+            onClicked: threadComment.showReplies()
+
+            AppLabel {
+                anchors.verticalCenter: parent.verticalCenter
+                text: threadComment.repliesBusy
                     ? qsTr("Loading…")
-                    : qsTr("Show %n reply(ies)", "", peerTubeComment.totalReplies)
+                    : qsTr("Show %n reply(ies)", "", threadComment.totalReplies)
                 font.pixelSize: Theme.fontSizeExtraSmall * sizeMultiplier
                 color: parent.highlighted ? palette.highlightColor : palette.secondaryHighlightColor
             }

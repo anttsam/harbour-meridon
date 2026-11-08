@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import QtGraphicalEffects 1.0
 import Sailfish.Silica 1.0
+import "../../lib/LinkHandler.js" as LinkHandler
 
 // Preview card for a status's external link (Mastodon's card.* fields)
 
@@ -135,10 +136,14 @@ Rectangle {
                     videoId: postLinkCard.link.peertube.id,
                     pageUrl: postLinkCard.link.uri
                 })
-            else
-                pageStack.push(Qt.resolvedUrl("../WebViewPage.qml"), {
-                    url: postLinkCard.link.uri
+            else {
+                // Lemmy posts and PeerTube videos shared without a PeerTube
+                // card are recognised by their link
+                var uri = postLinkCard.link.uri
+                LinkHandler.openFediverseLink(uri, pageStack, function () {
+                    pageStack.push(Qt.resolvedUrl("../WebViewPage.qml"), { url: uri })
                 })
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 .import "SessionManager.js" as SessionManager
 .import "UrlRouter.js" as UrlRouter
 .import "PeerTube.js" as PeerTube
+.import "Lemmy.js" as Lemmy
 
 // Classifies a tapped <a href> from rendered post/bio HTML.
 // mentionsByHref/tagsByHref (both optional) are the structured
@@ -48,22 +49,37 @@ function openLink(href, pageStack, mentionsByHref, tagsByHref) {
     } else if (link.type === "unresolvedMention") {
         resolveProfileLink(link.href, pageStack)
     } else {
-        // A PeerTube video link would resolve to a Mastodon status holding
-        // only its title and a link, so it is checked first. The URL shape
-        // alone is not proof (other sites use /w/ too), hence the API call
-        // before committing to PeerTubePage.
-        var video = PeerTube.parseVideoUrl(link.href)
-        if (video) {
-            PeerTube.fetchVideo(video.host, video.id, function (json) {
-                pageStack.push(Qt.resolvedUrl("../pages/PeerTubePage.qml"),
-                               { host: video.host, videoId: video.id, pageUrl: link.href, video: json })
-            }, function () {
-                openResolved(link.href, pageStack)
-            })
-        } else {
+        openFediverseLink(link.href, pageStack, function () {
             openResolved(link.href, pageStack)
-        }
+        })
     }
+}
+
+// A PeerTube video or a Lemmy post would resolve to a Mastodon status holding
+// only its title and a link, so those are checked first and shown from their
+// own server's API instead. The URL shape alone is not proof (other sites use
+// /w/ or /post/ too), hence the API call before committing to a page.
+// onOther() runs when the link is neither.
+function openFediverseLink(href, pageStack, onOther) {
+    var video = PeerTube.parseVideoUrl(href)
+    if (video) {
+        PeerTube.fetchVideo(video.host, video.id, function (json) {
+            pageStack.push(Qt.resolvedUrl("../pages/PeerTubePage.qml"),
+                           { host: video.host, videoId: video.id, pageUrl: href, video: json })
+        }, onOther)
+        return
+    }
+
+    var lemmy = Lemmy.parseUrl(href)
+    if (lemmy) {
+        Lemmy.resolveLink(lemmy, function (view) {
+            pageStack.push(Qt.resolvedUrl("../pages/LemmyPage.qml"),
+                           { host: lemmy.host, postId: String(view.post.id), pageUrl: href, postView: view })
+        }, onOther)
+        return
+    }
+
+    onOther()
 }
 
 // No structured mention/tag data backed this href, so it's either

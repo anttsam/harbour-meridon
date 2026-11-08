@@ -481,7 +481,7 @@ AppPage {
             }
         }
 
-        delegate: PeerTubeComment {
+        delegate: ThreadComment {
             depth: model.depth
             html: model.html
             isDeleted: model.isDeleted
