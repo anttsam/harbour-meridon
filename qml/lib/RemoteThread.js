@@ -11,6 +11,21 @@
 // display only: its id and account id are blanked and PostDelegate.qml
 // resolves it through search (by URL) when it is tapped.
 
+// Servers that answer Mastodon's API with an error, so asking is pointless.
+// Threads federates but has no such API; others are added when a request to
+// them fails with an HTTP error, until the app is closed.
+var unsupportedHosts = { "threads.net": true }
+
+function isSupported(host) {
+    return unsupportedHosts[host] !== true
+}
+
+// A transport error (offline, timeout) says nothing about the server
+function noteFailure(host, status, message) {
+    if (status !== 0 || message !== "Network error")
+        unsupportedHosts[host] = true
+}
+
 function hostOf(url) {
     var match = /^https?:\/\/([^\/?#]+)/i.exec(url || "")
     return match ? match[1] : ""

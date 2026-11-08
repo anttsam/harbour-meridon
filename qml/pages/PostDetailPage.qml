@@ -23,7 +23,8 @@ AppPage {
     property bool remoteMerged: false
     property var _context: null
     readonly property string remoteHost: rawFocusPost && rawFocusPost.account
-        && rawFocusPost.account.acct.indexOf("@") >= 0 ? RemoteThread.hostOf(rawFocusPost.uri) : ""
+        && rawFocusPost.account.acct.indexOf("@") >= 0 && RemoteThread.isSupported(RemoteThread.hostOf(rawFocusPost.uri))
+        ? RemoteThread.hostOf(rawFocusPost.uri) : ""
 
     property var rawFocusPost: null
     property var rawReplies: []
@@ -203,7 +204,12 @@ AppPage {
         }, function (status, message) {
             console.warn("[PostDetail] origin replies failed:", host, status, message)
             remoteLoading = false
-            Notices.show(qsTr("Couldn't load replies from %1").arg(host), Notice.Short, Notice.Center)
+            RemoteThread.noteFailure(host, status, message)
+            // hides the menu item again unless it was only the network
+            remoteMerged = !RemoteThread.isSupported(host)
+            Notices.show(remoteMerged ? qsTr("%1 doesn't share its replies").arg(host)
+                                      : qsTr("Couldn't load replies from %1").arg(host),
+                         Notice.Short, Notice.Center)
         })
     }
 
