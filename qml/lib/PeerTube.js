@@ -4,12 +4,6 @@
 // Read-only access to a PeerTube instance's public REST API. Unlike the
 // Mastodon calls in SessionManager.js these go straight to the host that
 // serves the video (taken from the link or card), unauthenticated.
-//
-// Mastodon can't represent a PeerTube Video: search+resolve turns it into a
-// status holding only the title and a link, with no stream and none of the
-// video's comments. So a PeerTube link is recognised by its URL shape (or by
-// the oEmbed iframe in the preview card, see PostMapper.js) and shown by
-// PeerTubePage.qml from this API instead.
 
 // PeerTube ids are a UUID, a 22 character base58 shortUUID or a numeric id
 var watchRe = /^https?:\/\/([^\/?#]+)\/(?:w|videos\/watch|videos\/embed)\/([A-Za-z0-9-]{8,40})(?:[\/?#]|$)/i
