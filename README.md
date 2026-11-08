@@ -9,6 +9,7 @@ Main features:
 -   Optional colourful emoji, including your server's custom emoji
 -   Custom font support for reading posts
 -   Four appearance presets: Native, More contrast, Mastodon, and Custom
+-   Remember reading position (requires Mastodon 3.0 or newer)
 
 Not implemented yet:
 - Multi account switching
