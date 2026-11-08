@@ -1,3 +1,11 @@
+* Sun Nov 08 2026 anttsam <sami@anttila.ch> 1.6-1
+- View PeerTube videos and their comments
+- View Lemmy posts and their comments
+- Load missing replies of posts from other servers
+- Reopen the Home feed where you stopped reading
+- Reorganized settings with a live preview for appearance
+- Lower background activity from the cover
+
 * Fri Oct 23 2026 anttsam <sami@anttila.ch> 1.5.2-1
 - Fix package description for Harbour validation
 
