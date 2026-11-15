@@ -71,110 +71,117 @@ AppPage {
 
             SettingsPreview {}
 
-            ExpandingSection {
-                id: fineTune
-                title: qsTr("Fine-tune")
+            // Standalone, ExpandingSection only fades its content: the slide animation and
+            // scroll-into-view are enabled by the group
+            ExpandingSectionGroup {
+                width: parent.width
+                currentIndex: -1
 
-                content.sourceComponent: Column {
-                    width: fineTune.width
+                ExpandingSection {
+                    id: fineTune
+                    title: qsTr("Fine-tune")
 
-                    SectionHeader { text: qsTr("Text") }
+                    content.sourceComponent: Column {
+                        width: fineTune.width
 
-                    SettingsCombo {
-                        label: qsTr("Font")
-                        manager: AppLib.FontManager
-                        key: "selectedKey"
-                        setter: "selectFont"
-                        keys: appearancePage.fontKeys
-                        labels: [qsTr("Default"), qsTr("Fira Sans"), qsTr("Open Sans"), qsTr("Roboto"), qsTr("Inter")]
-                        fontFamilies: [
-                            Theme.fontFamily,
-                            appearancePage.previewFamily(AppLib.FontManager.keyFiraSans),
-                            appearancePage.previewFamily(AppLib.FontManager.keyOpenSans),
-                            appearancePage.previewFamily(AppLib.FontManager.keyRoboto),
-                            appearancePage.previewFamily(AppLib.FontManager.keyInter)
-                        ]
-                        fontWeight: AppLib.FontManager.activeFontWeight
-                    }
+                        SectionHeader { text: qsTr("Text") }
 
-                    SettingsSwitch {
-                        width: parent.width
-                        text: qsTr("Light weight")
-                        description: qsTr("Use a lighter weight where the font has one.")
-                        manager: AppLib.FontManager
-                        key: "lightWeight"
-                        setter: "selectLightWeight"
-                    }
+                        SettingsCombo {
+                            label: qsTr("Font")
+                            manager: AppLib.FontManager
+                            key: "selectedKey"
+                            setter: "selectFont"
+                            keys: appearancePage.fontKeys
+                            labels: [qsTr("Default"), qsTr("Fira Sans"), qsTr("Open Sans"), qsTr("Roboto"), qsTr("Inter")]
+                            fontFamilies: [
+                                Theme.fontFamily,
+                                appearancePage.previewFamily(AppLib.FontManager.keyFiraSans),
+                                appearancePage.previewFamily(AppLib.FontManager.keyOpenSans),
+                                appearancePage.previewFamily(AppLib.FontManager.keyRoboto),
+                                appearancePage.previewFamily(AppLib.FontManager.keyInter)
+                            ]
+                            fontWeight: AppLib.FontManager.activeFontWeight
+                        }
 
-                    SettingsSlider {
-                        label: qsTr("Text size")
-                        minimumValue: AppLib.FontManager.fontSizeMultiplierMin
-                        maximumValue: AppLib.FontManager.fontSizeMultiplierMax
-                        manager: AppLib.FontManager
-                        key: "fontSizeMultiplier"
-                        setter: "selectFontSizeMultiplier"
-                    }
+                        SettingsSwitch {
+                            width: parent.width
+                            text: qsTr("Light weight")
+                            description: qsTr("Use a lighter weight where the font has one.")
+                            manager: AppLib.FontManager
+                            key: "lightWeight"
+                            setter: "selectLightWeight"
+                        }
 
-                    SettingsSlider {
-                        label: qsTr("Line spacing")
-                        minimumValue: AppLib.FontManager.lineHeightMultiplierMin
-                        maximumValue: AppLib.FontManager.lineHeightMultiplierMax
-                        manager: AppLib.FontManager
-                        key: "lineHeightMultiplier"
-                        setter: "selectLineHeightMultiplier"
-                    }
+                        SettingsSlider {
+                            label: qsTr("Text size")
+                            minimumValue: AppLib.FontManager.fontSizeMultiplierMin
+                            maximumValue: AppLib.FontManager.fontSizeMultiplierMax
+                            manager: AppLib.FontManager
+                            key: "fontSizeMultiplier"
+                            setter: "selectFontSizeMultiplier"
+                        }
 
-                    SectionHeader { text: qsTr("Colors") }
+                        SettingsSlider {
+                            label: qsTr("Line spacing")
+                            minimumValue: AppLib.FontManager.lineHeightMultiplierMin
+                            maximumValue: AppLib.FontManager.lineHeightMultiplierMax
+                            manager: AppLib.FontManager
+                            key: "lineHeightMultiplier"
+                            setter: "selectLineHeightMultiplier"
+                        }
 
-                    SettingsCombo {
-                        label: qsTr("Highlight color")
-                        description: qsTr("Native follows your Ambience.")
-                        manager: AppLib.BackgroundManager
-                        key: "highlightKey"
-                        setter: "selectHighlightKey"
-                        keys: [
-                            AppLib.BackgroundManager.highlightKeyNative,
-                            AppLib.BackgroundManager.highlightKeyMastodon
-                        ]
-                        labels: [qsTr("Native"), qsTr("Mastodon")]
-                    }
+                        SectionHeader { text: qsTr("Colors") }
 
-                    SettingsCombo {
-                        label: qsTr("Overlay color")
-                        manager: AppLib.BackgroundManager
-                        key: "colorKey"
-                        setter: "selectColorKey"
-                        keys: [
-                            AppLib.BackgroundManager.colorKeyPrimary,
-                            AppLib.BackgroundManager.colorKeySecondary,
-                            AppLib.BackgroundManager.colorKeyMastodon
-                        ]
-                        labels: [qsTr("Primary"), qsTr("Secondary"), qsTr("Mastodon")]
-                    }
+                        SettingsCombo {
+                            label: qsTr("Highlight color")
+                            description: qsTr("Native follows your Ambience.")
+                            manager: AppLib.BackgroundManager
+                            key: "highlightKey"
+                            setter: "selectHighlightKey"
+                            keys: [
+                                AppLib.BackgroundManager.highlightKeyNative,
+                                AppLib.BackgroundManager.highlightKeyMastodon
+                            ]
+                            labels: [qsTr("Native"), qsTr("Mastodon")]
+                        }
 
-                    SettingsSlider {
-                        label: qsTr("Overlay intensity")
-                        minimumValue: AppLib.BackgroundManager.opacityMin
-                        maximumValue: AppLib.BackgroundManager.opacityMax
-                        manager: AppLib.BackgroundManager
-                        key: "opacity"
-                        setter: "selectOpacity"
-                    }
+                        SettingsCombo {
+                            label: qsTr("Overlay color")
+                            manager: AppLib.BackgroundManager
+                            key: "colorKey"
+                            setter: "selectColorKey"
+                            keys: [
+                                AppLib.BackgroundManager.colorKeyPrimary,
+                                AppLib.BackgroundManager.colorKeySecondary,
+                                AppLib.BackgroundManager.colorKeyMastodon
+                            ]
+                            labels: [qsTr("Primary"), qsTr("Secondary"), qsTr("Mastodon")]
+                        }
 
-                    SettingsSwitch {
-                        width: parent.width
-                        text: qsTr("Overlay on navigation bar")
-                        manager: AppLib.BackgroundManager
-                        key: "affectTabBar"
-                        setter: "selectAffectTabBar"
-                    }
+                        SettingsSlider {
+                            label: qsTr("Overlay intensity")
+                            minimumValue: AppLib.BackgroundManager.opacityMin
+                            maximumValue: AppLib.BackgroundManager.opacityMax
+                            manager: AppLib.BackgroundManager
+                            key: "opacity"
+                            setter: "selectOpacity"
+                        }
 
-                    SettingsSwitch {
-                        width: parent.width
-                        text: qsTr("Overlay on cover")
-                        manager: AppLib.BackgroundManager
-                        key: "affectCover"
-                        setter: "selectAffectCover"
+                        SettingsSwitch {
+                            width: parent.width
+                            text: qsTr("Overlay on navigation bar")
+                            manager: AppLib.BackgroundManager
+                            key: "affectTabBar"
+                            setter: "selectAffectTabBar"
+                        }
+
+                        SettingsSwitch {
+                            width: parent.width
+                            text: qsTr("Overlay on cover")
+                            manager: AppLib.BackgroundManager
+                            key: "affectCover"
+                            setter: "selectAffectCover"
+                        }
                     }
                 }
             }
