@@ -1,3 +1,11 @@
+* Sun Nov 15 2026 anttsam <sami@anttila.ch> 1.7-1
+- Save pictures from the image viewer, with a setting for the folder
+- Show image descriptions with an ALT button in the image viewer
+- Show the new-posts banner only on the visible feed
+- Fix emoji drawn in the wrong place on the cover
+- Fix a very long name drawing over the handle in posts
+- Animate the Fine-tune section in the appearance settings
+
 * Sun Nov 08 2026 anttsam <sami@anttila.ch> 1.6-1
 - View PeerTube videos and their comments
 - View Lemmy posts and their comments
