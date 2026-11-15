@@ -223,6 +223,7 @@ Item {
             }
 
             readonly property bool tabBarHidden: loader.item ? loader.item.tabBarHidden : false
+            readonly property bool isCurrentSlide: PathView.isCurrentItem
 
             Loader {
                 id: loader
@@ -234,6 +235,7 @@ Item {
                 id: feedPaneComponent
                 FeedPane {
                     feed: feedCarouselView.feedFromRow(model)
+                    shown: slideDelegate.isCurrentSlide
                     // Must outlive this delegate, see feedpane
                     contentAnchor: feedCarouselView
                 }

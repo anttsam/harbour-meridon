@@ -30,6 +30,12 @@ Item {
 
     readonly property bool isCurrent: !PathView.view || PathView.isCurrentItem
 
+    // Whether this pane is the one on screen. The carousel keeps the panes
+    // next to it loaded too (PathView.view is not reachable from a pane
+    // nested in a Loader, so isCurrent above is always true there), and only
+    // the visible one may show a "N new posts" banner.
+    property bool shown: true
+
     function checkLoad() {
         var content = FeedsManager.getFeedContent(feed.id, contentAnchor)
         if (isCurrent && !content.loadedOnce && !content.busy)
@@ -184,6 +190,9 @@ Item {
         applyLanding()
         landingTimer.restart()
 
+        if (!shown)
+            return
+
         if (index === 1)
             Notices.show(qsTr("%n new post", "", index), Notice.Short, Notice.Top, 0, Theme.itemSizeSmall)
         else
@@ -232,6 +241,9 @@ Item {
                 // The list keeps showing what you were reading, so say
                 // something new is waiting above it. Offset to sit under the
                 // tab strip rather than over the feed names.
+                if (!shown)
+                    return
+
                 if (newCount === 1)
                     Notices.show(qsTr("%n new post", "", newCount), Notice.Short, Notice.Top, 0, Theme.itemSizeSmall)
                 else if (newCount > 1)
