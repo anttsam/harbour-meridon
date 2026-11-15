@@ -4,3 +4,4 @@ singleton PresetManager 1.0 PresetManager.qml
 singleton EmojiManager 1.0 EmojiManager.qml
 singleton VideoManager 1.0 VideoManager.qml
 singleton TimeManager 1.0 TimeManager.qml
+singleton DownloadManager 1.0 DownloadManager.qml

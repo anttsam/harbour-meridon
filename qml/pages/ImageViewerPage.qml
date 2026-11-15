@@ -1,6 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import harbour.meridon.Native 1.0
 import "components"
+import "../lib" as AppLib
 
 FullscreenContentPage {
     id: viewerPage
@@ -14,6 +16,32 @@ FullscreenContentPage {
 
     property real minScale: 1.0
     property real maxScale: 4.0
+
+    readonly property var currentImage: (slideshow.currentIndex >= 0 && slideshow.currentIndex < images.length)
+                                        ? images[slideshow.currentIndex] : null
+    readonly property string currentAlt: (currentImage && currentImage.alt) ? String(currentImage.alt).trim() : ""
+
+    // ALT text is hidden until the "ALT" button is tapped
+    property bool altShown: false
+    property bool saving: false
+
+    Connections {
+        target: slideshow
+        onCurrentIndexChanged: viewerPage.altShown = false
+    }
+
+    ImageSaver {
+        id: imageSaver
+
+        onSaved: {
+            viewerPage.saving = false
+            Notices.show(qsTr("Saved as %1").arg(fileName), Notice.Short, Notice.Center)
+        }
+        onFailed: {
+            viewerPage.saving = false
+            Notices.show(qsTr("Couldn't save the picture"), Notice.Short, Notice.Center)
+        }
+    }
 
     SlideshowView {
         id: slideshow
@@ -132,21 +160,105 @@ FullscreenContentPage {
             font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
         }
 
-        AppLabel {
+        IconButton {
+            id: downloadButton
             anchors {
+                right: parent.right
+                rightMargin: Theme.horizontalPageMargin
                 bottom: parent.bottom
                 bottomMargin: Theme.paddingLarge
-                horizontalCenter: parent.horizontalCenter
             }
-            width: parent.width - 2 * Theme.horizontalPageMargin
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
-            visible: text.length > 0
-            useCustomFont: true
-            color: Theme.secondaryColor
-            font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier
-            text: (slideshow.currentIndex >= 0 && slideshow.currentIndex < viewerPage.images.length)
-                ? (viewerPage.images[slideshow.currentIndex].alt || "") : ""
+            icon.source: "image://theme/icon-m-cloud-download"
+            enabled: !viewerPage.saving && !!viewerPage.currentImage && !!viewerPage.currentImage.fullsizeUrl
+            opacity: enabled ? 1.0 : Theme.opacityLow
+            onClicked: {
+                viewerPage.saving = true
+                imageSaver.save(String(viewerPage.currentImage.fullsizeUrl),
+                                AppLib.DownloadManager.imagePath)
+            }
+        }
+
+        // "ALT" badge, like in the official Mastodon app - only for pictures
+        // that have a description
+        Item {
+            id: altButton
+            visible: viewerPage.currentAlt.length > 0
+            anchors {
+                left: parent.left
+                leftMargin: Theme.horizontalPageMargin - Theme.paddingMedium
+                bottom: parent.bottom
+                bottomMargin: Theme.paddingLarge
+            }
+            width: altBadge.width + 2 * Theme.paddingMedium
+            height: Theme.itemSizeSmall
+
+            Rectangle {
+                id: altBadge
+                anchors.centerIn: parent
+                width: altBadgeLabel.width + 2 * Theme.paddingMedium
+                height: altBadgeLabel.height + Theme.paddingMedium
+                radius: Theme.paddingSmall
+                color: Theme.rgba(Theme.overlayBackgroundColor, 0.8)
+                border.width: 1
+                border.color: viewerPage.altShown ? Theme.highlightColor : Theme.rgba(Theme.primaryColor, 0.4)
+
+                AppLabel {
+                    id: altBadgeLabel
+                    //anchors.centerIn: parent
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenterOffset: Theme.paddingSmall/2
+                    useCustomFont: true
+                    bold: true
+                    text: qsTr("ALT")
+                    color: viewerPage.altShown ? Theme.highlightColor : Theme.primaryColor
+                    font.pixelSize: Theme.fontSizeExtraSmall * sizeMultiplier
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: viewerPage.altShown = !viewerPage.altShown
+            }
+        }
+
+        // The description on a translucent panel, so it stays readable over
+        // bright pictures. Long descriptions scroll.
+        Rectangle {
+            id: altPanel
+            visible: viewerPage.altShown && viewerPage.currentAlt.length > 0
+            anchors {
+                left: parent.left
+                right: parent.right
+                margins: Theme.horizontalPageMargin
+                bottom: altButton.top
+            }
+            height: Math.min(altFlickable.contentHeight + 2 * Theme.paddingMedium,
+                             viewerPage.height * 0.4)
+            radius: Theme.paddingSmall
+            color: Theme.rgba(Theme.overlayBackgroundColor, 0.8)
+
+            SilicaFlickable {
+                id: altFlickable
+                anchors {
+                    fill: parent
+                    margins: Theme.paddingMedium
+                }
+                clip: true
+                contentHeight: altLabel.height
+
+                AppLabel {
+                    id: altLabel
+                    width: parent.width
+                    wrapMode: Text.Wrap
+                    useCustomFont: true
+                    color: Theme.primaryColor
+                    font.pixelSize: Theme.fontSizeSmall * sizeMultiplier
+                    text: viewerPage.currentAlt
+                }
+
+                VerticalScrollDecorator {}
+            }
         }
     }
 }

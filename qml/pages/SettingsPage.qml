@@ -33,6 +33,12 @@ AppPage {
                 onClicked: pageStack.push(Qt.resolvedUrl("ReadingSettingsPage.qml"))
             }
 
+            SettingsEntry {
+                title: qsTr("Downloads")
+                subtitle: qsTr("Where saved pictures go")
+                onClicked: pageStack.push(Qt.resolvedUrl("DownloadSettingsPage.qml"))
+            }
+
             SectionHeader { text: qsTr("Account") }
 
             SettingsEntry {

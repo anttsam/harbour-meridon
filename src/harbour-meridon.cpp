@@ -11,6 +11,7 @@
 #include <QMetaObject>
 #include <QVariant>
 
+#include "imagesaver.h"
 #include "mediauploader.h"
 #include "urlrouter.h"
 
@@ -20,6 +21,7 @@ int main(int argc, char *argv[])
     QScopedPointer<QQuickView> view(SailfishApp::createView());
 
     qmlRegisterType<MediaUploader>("harbour.meridon.Native", 1, 0, "MediaUploader");
+    qmlRegisterType<ImageSaver>("harbour.meridon.Native", 1, 0, "ImageSaver");
 
     view->setSource(SailfishApp::pathToMainQml());
     view->show();

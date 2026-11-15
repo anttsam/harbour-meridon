@@ -287,3 +287,28 @@ function loadAutoplayGifs() {
 
     return result
 }
+
+function saveImageDownloadPath(path) {
+    var db = getDatabase()
+    db.transaction(function(tx) {
+        ensureTable(tx)
+        tx.executeSql(
+            "INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)",
+            ["imageDownloadPath", path])
+    })
+}
+
+// Returns "" if nothing has been saved (caller then uses the default folder).
+function loadImageDownloadPath() {
+    var db = getDatabase()
+    var result = ""
+
+    db.transaction(function(tx) {
+        ensureTable(tx)
+        var rs = tx.executeSql("SELECT value FROM preferences WHERE key = ?", ["imageDownloadPath"])
+        if (rs.rows.length > 0)
+            result = rs.rows.item(0).value
+    })
+
+    return result
+}

@@ -19,10 +19,12 @@ CONFIG += sailfishapp
 QT += network dbus
 
 SOURCES += src/harbour-meridon.cpp \
+    src/imagesaver.cpp \
     src/mediauploader.cpp \
     src/urlrouter.cpp
 
-HEADERS += src/mediauploader.h \
+HEADERS += src/imagesaver.h \
+    src/mediauploader.h \
     src/urlrouter.h
 
 DISTFILES += qml/harbour-meridon.qml \
@@ -42,6 +44,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/pages/OAuthLoginPage.qml \
     qml/pages/PostDetailPage.qml \
     qml/pages/AppearanceSettingsPage.qml \
+    qml/pages/DownloadSettingsPage.qml \
     qml/pages/ReadingSettingsPage.qml \
     qml/pages/SettingsPage.qml \
     qml/pages/UserProfilePage.qml \
@@ -81,6 +84,7 @@ DISTFILES += qml/harbour-meridon.qml \
     qml/lib/FeedMapperWorker.js \
     qml/lib/FeedMarkerPolicy.js \
     qml/lib/BackgroundManager.qml \
+    qml/lib/DownloadManager.qml \
     qml/lib/EmojiManager.qml \
     qml/lib/EmojiCodepoints.js \
     qml/lib/EmojiRecentStorage.js \
