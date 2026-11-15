@@ -213,7 +213,9 @@ CoverBackground {
                         color: Theme.secondaryColor
                         wrapMode: Text.Wrap
                         maximumLineCount: 2
-                        truncationMode: TruncationMode.Fade
+                        // Fade on a wrapped label turns elide on once lineCount is known,
+                        // which misplaces inline emoji images in StyledText
+                        truncationMode: TruncationMode.None
                     }
                 }
             }
