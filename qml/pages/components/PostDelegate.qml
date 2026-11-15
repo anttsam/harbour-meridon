@@ -531,6 +531,9 @@ ListItem {
                         font.pixelSize: (Theme.fontSizeExtraSmall) * sizeMultiplier
                         truncationMode: TruncationMode.Fade
                         width: Math.min(contentWidth, parent.width -  2* parent.spacing - displayNameLabel.width - agoLabel.width)
+                        // A label with no room left isn't clipped or faded (Silica fades only at
+                        // width > 0), it would draw over the name and the time
+                        visible: width > 0
                         anchors.verticalCenter: parent.verticalCenter
                         useCustomFont: true
                     }
@@ -687,6 +690,7 @@ ListItem {
                             font.pixelSize: (Theme.fontSizeSmall) * sizeMultiplier
                             truncationMode: TruncationMode.Fade
                             width: Math.min(contentWidth, parent.width -  2* parent.spacing - mainAgoLabel.width)
+                            visible: width > 0
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         AppLabel {
